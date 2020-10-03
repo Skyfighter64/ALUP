@@ -1,0 +1,861 @@
+en-us
+
+
+Project documentation for ALUP - Arduino LED UART Protocol (name may change)
+
+Version: 0.1 (internal)
+
+
+
+----------[Overview]------------
+
+The ALUP (Arduino LED USB Protocol, name may change) is a Protocol which handles connection-based transmission of RGB data.
+
+It's goal is to make it possible for almost any device to control an LED strip, even if this device has no digital Pins like an
+Arduino or Raspberry Pi, by using a device with such digital pins as a proxy (middle-man).
+
+[Fig. 1_en] (two devices connected to each other over a wired connection along with connected leds to the slave device)
+
+The original use was to control individually addressable LEDs like ws2812b with
+any kind of computer over a USB connection using an Arduino as a proxy.
+
+If you want to control LEDs as just described, you can use an implementation of this protocol in your project. For more, see [Implementations] [TODO: add link]
+
+
+-------------------------[Features]-------------------------
+
+Features:
+- It's connection based, meaning it first establishes a connection between two devices using some
+    initial parameters (as described in [Detailed documentation]) and then sends RGB Data continuously
+
+- It's a transport layer protocol, therefore independent of the type of physical connection.
+    For the requirements it has for the physical connection and underlying protocols, see [Requirements]
+
+- Support for custom configuration values (See: [Configuration format])
+- Support for subprograms (See: [Subprograms])
+
+
+Properties:
+- Its use is to transmit RGB data
+- It is master-slave based which means one of the two connected devices takes the role of the master (aka the data sender)
+    and the other one the role of the slave (the data receiver)
+
+- Data frames are only sent from a master device to the slave device (unidirectional)
+
+
+Limitations:
+- It does not offer Congestion/Flow control to minimize latency
+- It does not offer control for lost/corrupted packages
+
+- It only supports RGB (RGBW Support may be added in the future)
+
+
+
+----------[Requirements]------------
+A list of requirements which this protocol has in order to work.
+
+
+System requirements:
+The protocol has the following hardware requirements to work:
+
+- A data connection (e.g. USB, UART, Wi-Fi, ...) between the main device (Master) and the proxy device (Slave)
+
+It has the following requirements for underlying protocols to work:
+Note: If you are using an implementation of the protocol, those requirements are most likely already taken care of
+
+- Error-Free transmission
+- In-order transmission
+- No package loss
+
+These protocol requirements could theoretically also be satisfied by the physical connection as long as they are guaranteed.
+
+
+----------[General Principles]------------
+Physical Setup example:
+[Fig. 1_en] (two devices connected to each other over a wired connection along with connected LEDs to the slave device)
+
+This protocol describes a way to communicate LED data (R,G and B values for each LED) from a Master Device to a Slave Device which has LEDs connected to it.
+
+
+Setup:
+- Master/Sender (e.g. PC, Raspberry Pi, ...)
+- Slave/Receiver (e.g. Arduino)
+
+
+
+
+
+----------------[Protocol Workflow]----------------
+This section explains how the protocol works in detail by explaining what's going on on each device during each
+of the 3 processes. Those processes are:
+
+- Connecting [TODO: add link]
+- Data Transmission [TODO: add link]
+- Disconnecting [TODO: add link]
+
+
+How it works:
+When the two devices get connected via the physical connection, they first establish a connection to share some important
+configuration data like how many LEDs are connected to the slave device.
+If this happened successfully, the master device sends data for the LEDs as long as it wants to.
+When it is finished with sending LED data (e.g. the program on the master device using the protocol gets closed), the master device
+disconnects from the slave device.
+
+Those are the basics of this protocol. They are explained again but in more detail within the following lines.
+
+
+
+General Note: all timeouts (unless stated explicitly) are defined by the protocol implementation itself. If implementing this protocol,
+it is advised to use a timeout of multiple seconds for the best results.
+
+
+Connecting / Connection process:
+
+Before sending any LED data, both devices need to be connected and configured. This connection process consists of 3 Steps:
+- Requesting a connection
+- Exchanging configuration data
+- Confirming the configuration data
+
+
+[Fig. 2_en] (Overview of the connection process)
+
+
+
+Requesting a connection:
+
+Slave Device:
+As soon as the physical connection, along with the connection of all underlying protocols (e.g. Serial) is established,
+the Slave device begins to send a connection request byte [TODO: add link] and listens for a connection acknowledgement byte [TODO: add link] in fixed intervals,
+the size of which can be specified by the implementation itself (e.g.: 0.1s). Sending connection request bytes [TODO: add link] and listening for a
+connection acknowledgement byte [TODO: add link] will not time out and continue indefinitely until a connection acknowledgement byte [TODO: add link] was received.
+
+[Fig. 2_1_en] (Slave device sending a connection request to the master device and waiting for connection acknowledgement)
+
+
+Master Device:
+The master device starts by listening for a single Byte of data containing a connection request byte [TODO: add link]
+as soon as the connection is fully established. When receiving a connection request byte [TODO: add link], the master device prepares to receive the
+configuration [TODO: add link] next and sends a connection acknowledgement byte [TODO: add link] back to the slave device as soon as it is ready to
+receive the configuration. Listening for a connection request byte [TODO: add link] may time out, but can also continue until one was received. If a
+timeout is used in the end depends on the implementation of the Master Device.
+
+[Fig. 3_en] (Master device sending a connection acknowledgement byte to the Slave device)
+
+
+
+Exchanging the configuration:
+
+Slave Device:
+When receiving the connection acknowledgement, the slave device stops sending connection requests and listening for connection acknowledgements.
+It now prepares the configuration to be sent in the protocols configuration format [TODO: Add link to Configuration format]
+and sends it as soon as possible. After sending it waits for an configuration acknowledgement byte [TODO: add link],
+indicating that the master device received and applied the configuration successfully, or a configuration error byte [TODO: add link],
+indicating that the configuration could not be applied. In the later case, the connection process stops and the slave device
+try's for a new connection attempt by starting at the beginning and sending new connection requests.
+If no configuration acknowledgement byte or configuration error byte was received within a certain timeout, the slave device assumes that the
+connection is dead and also continues by trying for a new connection attempt by starting at the beginning and sending new connection requests.
+
+
+[Fig. 4_en] (Slave sending configuration to master )
+
+Master Device:
+
+After sending the connection acknowledgement, the master device starts listening for the configuration by listening for a configuration start byte [TODO: add link].
+This byte marks the start of the configuration and is part of the protocol configuration format [TODO: add link]. Upon receiving, the master device also receives
+the configuration values directly followed by it. If there was no configuration start byte received within a certain timeout, the master device assumes that the
+connection is dead and stops the connection process.
+
+When receiving the configuration in the protocol configuration format [TODO: Add link to Configuration format], the master device stops
+listening for the configuration and initializes everything necessary using the received configuration. As soon as the initialization
+is finished it sends an configuration acknowledgement byte [TODO: add link], indicating that it applied the configuration
+successfully. If the configuration could not be applied, it sends an configuration error byte [TODO: add link] to the Slave device indicating that there was
+a problem while applying the configuration. Reasons for sending a configuration error byte may be something like an incompatible protocol version, but are in the end
+defined by the implementation of the master device [TODO: add reasons to java implementation docs].
+
+
+Note: When implementing you may notify the user via both devices if the configuration could not be applied (e.g. Popup, LEDs blinking, etc.)
+
+[Fig. 5_en] (Master applying configuration and sending configuration acknowledgement, slave waiting for configuration acknowledgement )
+
+
+
+Confirming the configuration:
+
+Slave Device:
+
+If the slave now receives a configuration error Byte, it stops listening to any incoming data and may try to signal the user that
+a configuration error occurred.
+
+When it receives a configuration acknowledgement, it sends an configuration acknowledgement back to the master to indicate that
+the configuration process is now finished and it is ready to receive Data. The connection process is now finished and the device continues
+in the data transmission part.
+
+
+Master Device:
+After sending a configuration acknowledgement byte, the master device listens for a configuration acknowledgement byte from the Slave device.
+When the master receives the configuration acknowledgement from the slave device, the connection is established successfully and the
+devices are ready to move on to Data transmission. [TODO: Add link to Data Transmission]
+
+
+[Fig. 2_en] (Overview of the connection process)
+
+
+
+
+
+
+
+
+Data transmission:
+Now that the connection is established and the devices are configured, it is time to send LED data from the master device to the slave device.
+The following text and images will describe the process of sending and receiving LED data on both devices.
+
+[Fig. 1_data_en] (Overview of the Data transmission process)
+
+
+
+Slave Device:
+
+As soon as the Slave device sent its Configuration acknowledgement, it gets ready to receive frames of LED data in the specified frame format [TODO: add link to Frame docs]
+by waiting for a frame header [TODO: add link to frame header specifications].
+
+Waiting for a header should continue indefinitely until either a disconnect command is received, or a user input like a button press. For
+more, see [Disconnecting] [TODO: add link]. This means that the data transmission loop should never time out on the side of the slave device.
+
+
+When receiving the header, it first reads in the size of the frame body and then receives the whole frame body using this size value. It then checks the
+Command Byte [TODO: add link to Frame Header] of the header if it has the value of a protocol command (decimal values 0 - 7)[TODO: add link to protocol commands] or the
+value of a Subcommand (User specified Subcommand) [TODO: add link to Subprograms/Subcommands] (decimal values 8 - 255).
+The Slave device then executes the protocol command or Subcommand if possible.
+Note that the execution of Subcommands can also happen in parallel to the main program depending on the implementation and is therefore not guaranteed to happen
+before the Frame Body gets applied to the LEDs.
+
+
+Depending on the command, the Slave device also has to apply the LED data to the LEDs. To do this, it first validates the length of the frame body
+given by the header by checking if it complies with the specifications for the "body size" value [TODO: add link] and then, if successful, applies the data received
+in the Frame body to the LEDs if needed (This may not apply to protocol commands such as "disconnect").
+
+
+Checking the frame body size:
+
+The frame body always consists of pairs of 3 bytes which represent RGB values, it's length therefore always has to be a multiple of 3.
+If it's not a multiple of 3, the slave device sends a frame error byte [TODO: add link] to the master device and deletes the received
+frame body.
+
+If the Frame data is less than or equal to the "number of LEDs" * 3, the Slave device applies the LED data to the LEDs and sends a
+Frame Acknowledgement Byte to the Master Device [TODO: add Frame acknowledgement byte] to indicate for one, that the data was applied and
+it is ready to receive the next Frame, and also indicating that the device was not disconnected.
+
+If the Frame data is more than the (number of LEDs * 3), the Slave Device discards all of the data from this frame body and sends
+a Frame Error Byte to the master device.
+
+This has to be done in order to prevent desynchronisation of the data stream, in which case all of the incoming data afterwards would be invalid
+and the connection would have to be shut down and reestablished manually.
+
+
+
+It now returns to the start of the Data Transmission to receive the next frame. This continues indefinitely until a "disconnect" protocol command
+gets received.
+
+
+Master Device:
+
+As soon as the Master Device receives the Configuration acknowledgement from the Slave Device, it begins building Data Frames [TODO: add link] and sends them
+to the Slave Device whenever the program using the Protocol decides to send a Frame, meaning the intervals for sending frames are not fixed.
+
+The header of the frame is built by first looking at the led data to be sent and calculating, how many bytes are needed to send this data.
+Note that the LED data always comes in a pair of 3 bytes, one for the R, G and B channel, meaning that the resulting raw LED data's length
+always has to be a multiple of 3.
+
+The Master Device then checks if a special command like a protocol command such as "disconnect" or a custom Subcommand should be executed on
+the Slave device. If so, it sets the command byte of the header to the value of the wanted command as stated in the frame header specification [TODO: link to frame header spec]
+If no command should be executed, it sets the value of the command byte to "None" (0).
+
+
+It then builds the Frame body by appending each R, G and B value, each represented as one byte value, of each LED for which data should be
+sent, starting the first led up to the n'th. LED where n can be any number up to the number of LEDs connected to the Slave device, which
+can be found inside the configuration which was communicated on the connection process.
+Note: This means, you can change all LEDs in one Frame, but don't have to. All unchanged LEDs will stay the state they were in before the frame arrived
+if not overridden by a protocol command or subcommand.
+
+The built frame gets appended at the end of the header and sent to the slave device.
+
+
+The master device now waits for a frame acknowledgement byte, indicating that the slave device is ready to receive the next frame and the
+slave device did not disconnect, or a frame error byte indicating that the slave device did not disconnect, but could not apply the Frame.
+
+If there is no frame acknowledgement byte or frame error byte received within a specified time interval (eg. 10 seconds), the Master device assumes that
+the Slave device disconnected and may notify the user about the timeout. This is the main way to detect if the slave device disconnected during the data transmission.
+
+Note that the timeout interval may vary on the implementation or a user set value as it may be necessary to use a longer or shorter
+interval depending on the use case and the hardware used.
+
+
+If a frame acknowledgement was received, the master device continues at the beginning of the data transmission process and is allowed to send the next frame.
+
+When receiving a frame error, the master device should warn the user about this critical problem e.g. by throwing an exception. All three cases where a frame error
+gets sent should not be possible to reach by the end user. Therefore, such a frame error represents most likely an issue with the implementation itself. By sending a frame error,
+the slave device also signals the master device that it discarded the faulty frame body and is ready to receive the next frame.
+
+When no Frame acknowledgement was received within a certain timeout, the Master Device assumes that the Slave Device disconnected and kills the connection on his side
+without sending a "disconnect" command to the slave device.
+
+
+
+
+
+
+
+Disconnecting:
+
+The disconnection process can only be initiated by the master device. When the slave device wants to disconnect, it can simply
+stop responding with frame acknowledgements to time out on the master device. This way of disconnecting indirectly is used for
+the ease of implementation.
+
+
+When the master device wants to disconnect, it sends an empty frame with a "disconnect" command [TODO: add link] to the Slave Device and then disconnects
+his side of the connection by invalidating all connection relevant values and disconnecting all underlying protocols.
+
+Upon receiving a frame with a "disconnect" command inside the frame header, the slave device treats the connection as dead, invalidates all connection relevant values and
+disconnects the underlying connection on his side if needed. It then continues by waiting for new incoming connections.
+
+Note that there will be no Frame acknowledgement sent or received for the disconnection frame.
+
+
+
+
+
+
+----------[Installing]------------
+
+This section will give an overview about how to set up devices running the ALUP v. 0.1.
+
+> Disclaimer (!) //TODO: add disclaimer
+
+Step 0: Choose a connection type (e.g. Wi-Fi, USB, ...) to use. Currently, there are only implementations using USB, but wireless implementations may come in the future.
+        Note that both chosen implementations, the one for the master device, and the one for the slave device have to use the same connection type.
+
+
+Step 1: Select an implementation for the master device (See [Implementations]) fitting best for your use case and connection type.
+        The listed Implementations differ in things like compatible Hardware, Operating System, etc.
+
+Step 2: Install the implementation for the master device according to it's documentation. This implementation may have to be configured when using it or executing a program
+        using it, or before installation. To configure it, see its documentation.
+
+
+Step 3: Select an implementation for the slave device (See [Implementations]) fitting best for your slave device and connection type.
+        Those listed Implementations also may differ in things like compatible Hardware, Operating System, etc., but are generally compatible with all master device
+        implementations which use the same connection type unless stated differently in the documentation of one of the implementations.
+
+Step 4: Configure the implementation of the slave device according to it's documentation. Most of the time, this has to be done before installing it onto the device itself, as the slave device
+        probably won't interface with you directly after this point. For more information and how to configure it, see its documentation.
+
+Step 5: Connect the devices over the previously chosen connection type (e.g. Wi-Fi, USB, ...).
+        Note that you may also have to connect additional hardware like a Power Supply depending on your chosen hardware. This documentation is only about the protocol and therefore assumes
+        that you have done this already yourself and will not explain how to do it or when additional connections are needed.
+
+
+The devices are now ready to use. For additional help, see [Troubleshooting], [FAQ] and the documentations of the chosen implementations.
+
+
+
+
+
+
+
+
+> Explain (again) for what the code which is about to be installed by the user is intended for
+> How to Install the Project for use as intended (as described in [Overview] and the point above)
+> How to Install all necessary dependencies and a brief description for what they are used for
+
+> How to configure it to work (also Link to [Configuration])
+
+> How to start/stop
+> How to interact and how not to
+
+> Latest version (maybe version history)
+
+
+----------[Implementations]------------
+
+Official implementations:
+
+Master Device:
+//TODO: add link to java implementation
+
+Slave Device:
+//TODO: add link to arduino implementation
+
+
+> List provided implementations (code) if existing and how to properly use it (create extra documentation for each one)
+> Brief description of each implementation
+> Most important requirements of each implementation (Which Programming Language(s) it's designed for / Operating System / Programs it depends on)
+
+
+Creating an implementation:
+
+Generally, we want to encourage anyone to write their own implementation of the protocol using this documentation,
+as this is the goal of the documentation. Therefore, we try to make it as easy to understand as possible.
+If there are any parts of it that are not described well enough or are misleading, please open an issue.
+
+If you want to create an official implementation or you wrote an implementation and want to add it to the official implementations, make sure
+your project complies with the official implementation standard [TODO: add link] and open a pull request adding your project to the
+official implementations.
+
+
+------------------[Official Implementation Standard]------------------
+
+Core values:
+- Your implementation has to be open source
+- Your implementation has to be free to use for anyone
+- Your implementation has to properly implement this protocol (for compatibility reasons)
+
+
+Documentation:
+//TODO: add template for implementation docs
+
+The implementation has to be properly documented to make it easy to use for anyone. For this reason, the documentation of your implementation
+has to contain the following points:
+
+
+
+Specifications:
+  - protocol version used
+  - programming language used (as this is probably the point where most implementations will differ)
+  - hardware compatibility (e.g. which devices can be used)
+  - software compatibility, dependencies (e.g. which OS is supported, which programs are needed)
+  - compatible connection types (e.g. Wi-Fi, USB, etc.)
+
+  - any additional specifications you may want to add (e.g. special features, limitations, etc.)
+
+Guidance:
+  - installation guide
+  - configuration guide along with a list of all by the user tweakable variables along with valid values and default values.
+  - (if needed) configuration changes which have to be made to the other device (e.g. adding code for special subcommands)
+
+  - how to use the implementation
+  - at least one easy example on how to use it(the more the better)
+  - some simple troubleshooting help or FAQ
+
+Protocol specific:
+  - which timeouts are used in each step
+  - events which cause a Frame Error Byte to be sent (Slave Device only)
+
+Hardware specific:
+  which types of (addressable) LEDs are supported
+
+
+Subprograms:
+  - documentation for all custom subprograms used (what do they do, how and when to call them, ...)
+
+  - documentation for the "extra values" of the [Configuration Values] (if used)
+
+  - how to add own subprograms if possible (state specifically if not possible) and how to call them, along with
+    additional documentation if needed (e.g. when the subprograms are executed, and if they run in parallel to the main thread)
+
+
+Code style:
+  - use a consistent coding style
+  - please add comments to your code to help others understand it
+
+
+License:
+We want all official implementations to be usable for anyone, therefore your implementation should use one of the following licenses:
+
+
+  TODO: add which licenses should be used / are allowed for the implementations
+
+  If you want to release your implementation under a different license, please state which license you want to use and
+  the reasons in your pull request. We will only accept licenses that represent our core values as stated above.
+
+
+
+
+----------[Configuration]------------
+This section is about configuring implementations of the protocol. For the protocol configuration format, see [Configuration Format]
+
+
+Depending on the used connection type, the implementations may have to be configured differently. Therefore it's best to consult the
+documentation of each used implementation for configuring both devices.
+
+Generally, the values defined at [Configuration Format] do have to be configured on the slave device according to their definitions.
+This will also be explained in the documentation of the used implementation for the slave device
+
+
+
+----------[Contributing]------------
+
+This section is about the guidelines for contributing to this protocol. If you want to contribute by creating your own implementation
+of the protocol, see [Implementations]
+
+
+Currently work in progress; there may be new guides added to this section in the future.
+//TODO: add additional styleguides if needed
+
+Documentation Style:
+- When writing documentation, make sure that it is easy to understand. If there is any part in the existing documentation which is
+    difficult to understand, please open an issue.
+
+Features:
+- New features should be compatible with the current protocol. If they are not, it may be possible to include them in a second version of
+    this protocol in the future depending on the demand.
+
+- Features should be possible to implement for any implementation. If there is an exception, the feature has to include considerations on what
+    happens when it is not used/ignored.
+
+
+----------[Detailed documentation]------------
+
+This section contains definitions and constants of the protocol
+
+
+General Definitions:
+
+LED data:
+A set of 3 bytes representing the R, G and B value for a LED each within a range of 0-255
+
+Subcommand:
+A command with an ID corresponding to a Subprogram sent inside of a Frame Header to execute the Subprogram.
+For more information, see [Subprograms]
+
+Subprogram:
+A small Program which gets executed on the Slave device when a Subcommand with its ID gets received
+For more information, see [Subprograms]
+
+
+
+Definitions for data transmission:
+All mentions of the data types within this documentation refer to the definitions below if not stated otherwise.
+
+Note: Those definitions do not apply for the use of an implementation of the protocol, they only do for
+sending and receiving data using the protocol (describing in which format data is sent and received).
+Therefore they are only relevant if you are writing an implementation of the protocol.
+
+
+
+String:
+A string is a combination of UTF-8 encoded characters followed by a null byte used as terminator.
+String data has a dynamic length; The end of a string is marked with a Null byte (0x00) as a terminator.
+Therefore: When sending String data, send a Null byte (0x00) afterwards if it is not done by the used programming language itself.
+
+Note: Large Strings can have a significant impact on performance
+
+
+Integer:
+An integer number is a 32-bit 2s-compliment number.
+
+Long:
+A long is a 64bit 2s-compliment number.
+
+short:
+A short is a 16bit 2s-compliment number.
+
+byte:
+A byte is a 8bit unsigned number ranging from 0 to 255.
+
+
+This is important because:
+- while most architectures do use this definition, depending on the board, the architecture of the Arduino may use 16-bit numbers as integer.
+Therefore, when you want to send integer data, you may actually have to use variables of the type long (32bit-integer) on the Arduino
+and int (32bit-integer) on the master system. At the end, the actual bit length of the types has to match.
+
+- Strings may use a null terminator internally, but when sending strings, the null terminator may be cut off. It is Therefore
+important to ensure a null terminator is also sent so the receiving device does know the end of the string.
+
+
+
+--------------------------------------------------------------------------------
+
+
+Constants:
+This section describes constants that are relevant for this protocol
+
+Version:
+Value: One of:
+        "version 0.1 (internal)"
+
+ Description: A String value containing the protocol version.
+
+
+
+Connection Request Byte:
+Value: 255 (base 10)
+Description: Byte value indicating a connection request.
+For usage see: [Connecting] (TODO: Add link to "connecting" section)
+
+
+Connection Acknowledgement Byte:
+Value: 254 (base 10)
+Description: Byte value for acknowledging a connection request
+For usage see: [Connecting] (TODO: Add link to "connecting" section)
+
+
+Configuration Start Byte:
+Value: 253 (base 10)
+Description: Byte value indicating the start of the Configuration
+For usage see: [Connecting] (TODO: Add link to "connecting" section)
+
+
+Configuration Acknowledgement Byte:
+Value: 252 (base 10)
+Description: Byte value indicating that the Configuration was received and applied successfully
+For usage see: [Connecting] (TODO: Add link to "connecting" section)
+
+
+Configuration Error Byte:
+Value: 251 (base 10)
+Description: Byte value indicating that the Configuration was not received and applied successfully
+  and the connection attempt will be stopped
+For usage see: [Connecting] (TODO: Add link to "connecting" section)
+
+
+Frame Acknowledgement Byte:
+Value: 250 (base 10)
+Description: Byte value indicating that a Frame was received and applied successfully
+For usage see: [Data transmission] (TODO: Add link to "Data Transmission" section)
+               [Frame Header] (TODO: Add link to "Frame Header" section)
+               [Frame Body] (TODO: Add link to "Frame Body" section)
+
+
+Frame Error Byte:
+Value: 249 (base 10)
+Description: Byte value indicating that a Frame could not be received and applied successfully.
+For usage see: [Data transmission] (TODO: Add link to "Data Transmission" section)
+               [Frame Header] (TODO: Add link to "Frame Header" section)
+               [Frame Body] (TODO: Add link to "Frame Body" section)
+
+
+--------------------------------------------------------------------------------
+
+Configuration Format:
+This section describes the format of the configuration which gets exchanged between the devices when connecting.
+
+
+The configuration has to be in the following format:
+
+Configuration Start Byte (1 byte)
+Protocol Version (String, dynamic size)
+device name (String, dynamic size)
+number of LEDs connected (integer, 32bit);
+data pin (integer, 32bit);
+clock pin (integer, 32bit);
+Extra values (String, dynamic size)
+
+
+[Fig. 7_en] (The configuration format for the ALUP v. 0.1)
+
+
+
+Configuration Start Byte
+  Description: The configuration start byte marks the start of the configuration when sent over any kind of connection.
+               It is always followed by the configuration values according to the protocol configuration format.
+               For more details see: [Constants/Configuration Start Byte] [TODO: add link to configuration start byte]
+
+
+
+Configuration Values:
+
+Protocol Version
+  Type: String (UTF-8)
+  Description: the protocol version used by the slave device
+  Valid values:
+    One of:
+      "0.1 (internal)"
+
+
+Device name
+  Type: String (UTF-8)
+  Description: A descriptive name of the slave device; Does not have to be unique
+  Valid values: Any String value
+
+
+number of LEDs connected
+  Type: Integer
+  Description: The number of LEDs on the connected addressable LED strip
+  Valid values: A positive Integer value > 0
+
+
+
+data pin
+  Type: Integer
+  Description: The digital pin at which the data line of the addressable LED strip is connected
+  Valid values: A positive Integer value; Should be a valid Data pin of the connected slave device (e.g. Arduino)
+
+clock pin
+  Type: Integer
+  Description: The digital pin at which the clock line of the addressable LED strip is connected.
+    If the connected LED strip does not need a clock signal, this value can be ignored and set to 0
+  Valid values: A positive Integer value; Should be a valid Data pin of the connected slave device (e.g. Arduino) or 0 if no clock
+    signal is needed by the type of connected LED strip
+
+
+
+Extra Values
+    Type: String (UTF-8)
+    Description: A string containing any kind of values; This can be used by any developer to send additional configuration values, but may
+    be ignored by the Protocol implementation itself and just passed on to the implementing program or the user itself.
+    Valid values: Any String value
+
+
+
+--------------------------------------------------------------------------------
+
+
+Frame:
+A frame or "data frame" consists of 2 parts:
+The frame header and the frame body.
+
+[Fig. 1_frame_en] (Frame structure)
+
+Those parts are structured as stated below:
+
+Frame Header format:
+The frame header consists of 5 bytes:
+
+[Fig. 1_header_en] (Frame header structure)
+
+Byte: 0-4
+  Name: Frame body size
+  Type: Integer
+  Description: The size of the upcoming frame body in bytes
+  Valid values: A positive Number or 0; Has to be a multiple of 3 as the data of the upcoming body is LED data [TODO: add link to LED data].
+    It therefore also has to be <= (number of LEDs connected [TODO: add link] * 3) (as specified in the exchanged configuration [TODO: add link to configuration Values]).
+    0 when there is no body (e.g. when the command [TODO: add link] is "disconnect").
+
+Byte: 5
+  Name: Command
+  Type: Byte
+  Description: A byte value specifying a command to be executed before the upcoming LED data gets applied.
+  They are splitted into 2 different categories: Protocol commands and Subcommands.
+  Protocol commands are commands defined by the protocol to fulfill special tasks.
+  Subcommands are commands that execute small, user defined programs on the Slave Device.
+  To implement your own subprograms, see [Subprograms] [TODO: add link]
+
+  Valid values: Any byte value (0-255)
+    Commands:
+
+      Protocol commands:
+        Value: 0
+        Name: None
+        Description: Command indicating that no Command should be executed
+
+        Value: 1
+        Name: [RESERVED]
+        Description: Protocol command values reserved for future use.
+
+        Value: 2
+        Name: Disconnect
+        Description: Command telling the Slave Device to initiate the disconnection process [TODO: add disconnection Process][TODO: add link]
+
+        Value: 3-7
+        Name: [RESERVED]
+        Description: Protocol command values reserved for future use.
+
+
+      Subcommands:
+        Value: 8-255
+        Description: Commands executing the subprogram with the corresponding ID on the Slave device. The ID is the corresponding Value subtracted
+          by an offset of 8. Therefore, a Value of 8 Executes the subprogram with the ID 0, a Value of 9 executes the subprogram with the ID 1, etc.
+          For adding your own subprograms, see [Subprograms] [TODO: add link].
+
+
+
+
+Frame Body:
+The frame body consists of the amount of bytes specified in the Frame Body size [TODO: add link] each representing one R, G or B value of one LED,
+starting at the LED with the index 0 up to the LED with an index of (Frame Body size / 3).
+
+[Fig. 1_body_en] (Frame body structure)
+
+The size of the Body always has to be the Size specified in the Header, otherwise the Data will desynchronize and unexpected behavior will occur
+causing the protocol to stop functioning. It therefore has to comply to all specifications stated in the documentation of the frame
+body size [TODO: add link], which state, that the number of bytes always have to be a multiple of 3 and are not allowed to
+exceed the (number of LEDs * 3) [TODO: add link] communicated within the Connection Process [TODO: add link]. If this is not the case,
+a Frame Error Byte [TODO: add link to Frame Error Byte] will be sent instead of the Frame Acknowledgement Byte [TODO: Add link to Frame ack byte] to
+the master device when the frame gets received.
+
+
+The 3 Bytes for each LED have the following structure:
+
+Byte nr.          Channel
+0                   Red
+1                   Green
+2                   Blue
+
+
+
+Side note:
+The Channel of a Byte value can be determined by taking the Index of the Byte value (Not the index of the LED!) modulo 3.
+The Index of an LED can be determined by dividing the Index of the Byte Value by 3 floored.
+
+
+Examples:
+You have a Byte at index 121 with an example value of 255.
+You now want to know the index of the LED to which the value of 255 should be applied and which color this value is representing.
+
+As stated above:
+
+  121 / 3 = 40.333333...
+  Floor(40.33333...) = 40
+
+  > This value corresponds to LED 40
+
+  121 mod 3 = 1
+
+  > As defined in the table above, this value represents the Green Color channel
+
+Therefore, the byte at index 121 represents the Green Channel of LED 40.
+
+
+
+
+
+----------------------[Subprograms]----------------------
+This sections explains subprograms and subcommands.
+
+The protocols supports little subprograms that can be executed whenever a Frame is received by sending a Subcommand [TODO: add Link]
+with the ID of a Subprogram.
+
+Their goal is to provide a possibility to the end user, a program using the protocol or a protocol implementation itself to
+execute small scripts on the slave device whenever a Frame gets received by it.
+
+Those Subprograms have a ID ranging from 0 - 247 (internally represented as 8 - 255, for details see the Frame Header Documentation [TODO: add link])
+whereas each ID represents a function which can be executed by setting the corresponding ID in the Frame Header Command byte [TODO: add link].
+By default, each of those functions is empty (doing nothing when executed).
+
+Creating custom Subprograms:
+You can create your own subprograms by following the documentation for the code of the used slave device [TODO: Add guide to creating subprograms to arduino slave docs]
+Note that some of the IDs may already be occupied by the implementation itself. There is also no guaranty for when the subprogram gets executed
+(before, during or after applying the Frame Body to the LEDs) and if it runs linearly or in parallel. All of those factors depend on the implementation
+of the Slave Device and are therefore found in the documentation of its code. [TODO: add to the arduino slave docs]
+
+When writing custom Subprograms, please note that, depending on the implementation, those Subprograms may not be executed parallel and therefore
+may have a significant impact on performance and frame rates of the LEDs.
+
+
+
+----------[Troubleshooting]------------
+> problems which can occur during installing, building and running the project and how to solve them (even trivial ones!)
+
+
+
+----------[Licensing]------------
+> Licensing information (maybe in separate file)
+
+
+----------[Future ideas]------------
+Normal led Support
+
+Add offset to frame header to minimize data transfer and delay, making it possible to change any led without changing other leds which stay the same.
+
+
+TODOs until release:
+
+create git
+change name
+create wiki
+add Disclaimer
+add licensing
+
+Add clear command
+Add support for led offset in header (only changing some leds in the middle of the strip)
