@@ -547,7 +547,7 @@ A long is a 64bit 2s-compliment number.
 
 [Fig. 4_docs_general_en] (A long as defined above)
 
-short:
+Short:
 A short is a 16bit 2s-compliment number.
 
 [Fig. 5_docs_general_en] (A short as defined above)
