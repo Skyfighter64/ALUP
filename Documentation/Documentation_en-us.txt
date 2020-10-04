@@ -360,22 +360,6 @@ The devices are now ready to use. For additional help, see [Troubleshooting], [F
 
 
 
-
-
-
-
-> Explain (again) for what the code which is about to be installed by the user is intended for
-> How to Install the Project for use as intended (as described in [Overview] and the point above)
-> How to Install all necessary dependencies and a brief description for what they are used for
-
-> How to configure it to work (also Link to [Configuration])
-
-> How to start/stop
-> How to interact and how not to
-
-> Latest version (maybe version history)
-
-
 ----------[Implementations]------------
 
 Official implementations:
