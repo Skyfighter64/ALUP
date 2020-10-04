@@ -210,12 +210,18 @@ Data transmission:
 Now that the connection is established and the devices are configured, it is time to send LED data from the master device to the slave device.
 The following text and images will describe the process of sending and receiving LED data on both devices.
 
+The data transmission process has 3 steps:
+
+- Sending/Receiving a frame
+- Applying the frame
+- Acknowledging the frame
+
+
 [Fig. 1_data_en] (Overview of the Data transmission process)
 
 
 
 Slave Device:
-
 As soon as the Slave device sent its Configuration acknowledgement, it gets ready to receive frames of LED data in the specified frame format [TODO: add link to Frame docs]
 by waiting for a frame header [TODO: add link to frame header specifications].
 
@@ -253,10 +259,11 @@ This has to be done in order to prevent desynchronisation of the data stream, in
 and the connection would have to be shut down and reestablished manually.
 
 
-
 It now returns to the start of the Data Transmission to receive the next frame. This continues indefinitely until a "disconnect" protocol command
 gets received.
 
+
+[Fig. 2_data_en] (Overview of the Data transmission process for the slave device)
 
 Master Device:
 
@@ -301,7 +308,7 @@ When no Frame acknowledgement was received within a certain timeout, the Master 
 without sending a "disconnect" command to the slave device.
 
 
-
+[Fig. 2_data_en] (Overview of the Data transmission process for the master device)
 
 
 
@@ -323,7 +330,7 @@ Note that there will be no Frame acknowledgement sent or received for the discon
 
 
 
-
+[Fig. 1_disconnect_en] (Overview of the disconnection process)
 
 
 ----------[Installing]------------
@@ -498,6 +505,9 @@ General Definitions:
 LED data:
 A set of 3 bytes representing the R, G and B value for a LED each within a range of 0-255
 
+[Fig. 1_docs_general_en] (a LED data tripel)
+
+
 Subcommand:
 A command with an ID corresponding to a Subprogram sent inside of a Frame Header to execute the Subprogram.
 For more information, see [Subprograms]
@@ -524,18 +534,28 @@ Therefore: When sending String data, send a Null byte (0x00) afterwards if it is
 
 Note: Large Strings can have a significant impact on performance
 
+[Fig. 2_docs_general_en] (A string as defined above)
+
 
 Integer:
 An integer number is a 32-bit 2s-compliment number.
 
+[Fig. 3_docs_general_en] (An integer as defined above)
+
 Long:
 A long is a 64bit 2s-compliment number.
+
+[Fig. 4_docs_general_en] (A long as defined above)
 
 short:
 A short is a 16bit 2s-compliment number.
 
+[Fig. 5_docs_general_en] (A short as defined above)
+
 byte:
 A byte is a 8bit unsigned number ranging from 0 to 255.
+
+[Fig. 6_docs_general_en] (A byte as defined above)
 
 
 This is important because:
@@ -625,8 +645,7 @@ data pin (integer, 32bit);
 clock pin (integer, 32bit);
 Extra values (String, dynamic size)
 
-
-[Fig. 7_en] (The configuration format for the ALUP v. 0.1)
+[Fig. 1_docs_configuration_en] (The configuration format for the ALUP v. 0.1)
 
 
 
@@ -689,14 +708,14 @@ Frame:
 A frame or "data frame" consists of 2 parts:
 The frame header and the frame body.
 
-[Fig. 1_frame_en] (Frame structure)
+[Fig. 1_docs_frame_en] (Frame structure)
 
 Those parts are structured as stated below:
 
 Frame Header format:
 The frame header consists of 5 bytes:
 
-[Fig. 1_header_en] (Frame header structure)
+[Fig. 2_docs_frame_en] (Frame header structure)
 
 Byte: 0-4
   Name: Frame body size
@@ -710,7 +729,7 @@ Byte: 5
   Name: Command
   Type: Byte
   Description: A byte value specifying a command to be executed before the upcoming LED data gets applied.
-  They are splitted into 2 different categories: Protocol commands and Subcommands.
+  They are split into 2 different categories: Protocol commands and Subcommands.
   Protocol commands are commands defined by the protocol to fulfill special tasks.
   Subcommands are commands that execute small, user defined programs on the Slave Device.
   To implement your own subprograms, see [Subprograms] [TODO: add link]
@@ -749,7 +768,7 @@ Frame Body:
 The frame body consists of the amount of bytes specified in the Frame Body size [TODO: add link] each representing one R, G or B value of one LED,
 starting at the LED with the index 0 up to the LED with an index of (Frame Body size / 3).
 
-[Fig. 1_body_en] (Frame body structure)
+[Fig. 3_docs_frame_en] (Frame body structure)
 
 The size of the Body always has to be the Size specified in the Header, otherwise the Data will desynchronize and unexpected behavior will occur
 causing the protocol to stop functioning. It therefore has to comply to all specifications stated in the documentation of the frame
@@ -766,7 +785,7 @@ Byte nr.          Channel
 1                   Green
 2                   Blue
 
-
+[Fig. 1_docs_general_en] (a LED data tripel)
 
 Side note:
 The Channel of a Byte value can be determined by taking the Index of the Byte value (Not the index of the LED!) modulo 3.
@@ -830,7 +849,7 @@ may have a significant impact on performance and frame rates of the LEDs.
 ----------[Future ideas]------------
 Normal led Support
 
-Add offset to frame header to minimize data transfer and delay, making it possible to change any led without changing other leds which stay the same.
+Add offset to frame header to minimize data transfer and delay, making it possible to change any led without changing other LEDs which stay the same.
 
 
 TODOs until release:
