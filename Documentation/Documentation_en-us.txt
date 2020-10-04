@@ -717,7 +717,7 @@ The frame header consists of 5 bytes:
 
 [Fig. 2_docs_frame_en] (Frame header structure)
 
-Byte: 0-4
+Byte: 0-3
   Name: Frame body size
   Type: Integer
   Description: The size of the upcoming frame body in bytes
@@ -725,7 +725,7 @@ Byte: 0-4
     It therefore also has to be <= (number of LEDs connected [TODO: add link] * 3) (as specified in the exchanged configuration [TODO: add link to configuration Values]).
     0 when there is no body (e.g. when the command [TODO: add link] is "disconnect").
 
-Byte: 5
+Byte: 4
   Name: Command
   Type: Byte
   Description: A byte value specifying a command to be executed before the upcoming LED data gets applied.
