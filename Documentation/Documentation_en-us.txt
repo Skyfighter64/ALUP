@@ -835,7 +835,6 @@ Add offset to frame header to minimize data transfer and delay, making it possib
 
 TODOs until release:
 
-create git
 change name
 create wiki
 add Disclaimer
