@@ -1,0 +1,4 @@
+#this is the gitignore file for this project
+
+#ignore folder wit local files
+local/
