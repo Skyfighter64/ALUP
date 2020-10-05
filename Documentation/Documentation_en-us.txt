@@ -237,9 +237,9 @@ Note that the execution of Subcommands can also happen in parallel to the main p
 before the Frame Body gets applied to the LEDs.
 
 
-Depending on the command, the Slave device also has to apply the LED data to the LEDs. To do this, it first validates the length of the frame body
-given by the header by checking if it complies with the specifications for the "body size" value [TODO: add link] and then, if successful, applies the data received
-in the Frame body to the LEDs if needed (This may not apply to protocol commands such as "disconnect").
+Depending on the command, the Slave device also has to apply the LED data to the LEDs. To do this, it first validates the length of the frame body and the frame body offset
+given by the header by checking if they comply with the specifications for the "body size" and "body offset" values [TODO: add links] and then, if successful, applies the data received
+in the Frame body to the LEDs if needed, using the given offset (This may not apply to protocol commands such as "disconnect").
 
 
 Checking the frame body size:
@@ -249,7 +249,7 @@ If it's not a multiple of 3, the slave device sends a frame error byte [TODO: ad
 frame body.
 
 If the Frame data is less than or equal to the "number of LEDs" * 3, the Slave device applies the LED data to the LEDs and sends a
-Frame Acknowledgement Byte to the Master Device [TODO: add Frame acknowledgement byte] to indicate for one, that the data was applied and
+Frame Acknowledgement Byte to the master device [TODO: add link] to indicate for one, that the data was applied and
 it is ready to receive the next Frame, and also indicating that the device was not disconnected.
 
 If the Frame data is more than the (number of LEDs * 3), the Slave Device discards all of the data from this frame body and sends
@@ -261,6 +261,15 @@ and the connection would have to be shut down and reestablished manually.
 
 It now returns to the start of the Data Transmission to receive the next frame. This continues indefinitely until a "disconnect" protocol command
 gets received.
+
+
+Checking the frame body offset:
+
+The frame body offset indicates, by how much LEDs the sent data should be offset from LED 0. It therefore has to be 0 (no offset) or bigger.
+Because the last LED data of the frame should not be bigger than the actual last LED connected to the slave device, the offset + body size / 3
+should be smaller than the number of LEDs [TODO: add links for whole section]. If one of those conditions is not followed, the slave device
+sends a frame error byte [TODO: add link] to the master device, indicating that the frame could not be applied, and skips applying the frame.
+
 
 
 [Fig. 2_data_en] (Overview of the Data transmission process for the slave device)
@@ -610,6 +619,8 @@ Configuration Error Byte:
 Value: 251 (base 10)
 Description: Byte value indicating that the Configuration was not received and applied successfully
   and the connection attempt will be stopped
+Causes:
+    - Invalid configuration received by the slave device
 For usage see: [Connecting] (TODO: Add link to "connecting" section)
 
 
@@ -624,6 +635,10 @@ For usage see: [Data transmission] (TODO: Add link to "Data Transmission" sectio
 Frame Error Byte:
 Value: 249 (base 10)
 Description: Byte value indicating that a Frame could not be received and applied successfully.
+Causes:
+  - Invalid frame body size received by the slave device (See frame body size [TODO: add link])
+  - Invalid frame body offset received by the slave device (See frame body offset [TODO: add link])
+
 For usage see: [Data transmission] (TODO: Add link to "Data Transmission" section)
                [Frame Header] (TODO: Add link to "Frame Header" section)
                [Frame Body] (TODO: Add link to "Frame Body" section)
@@ -713,7 +728,7 @@ The frame header and the frame body.
 Those parts are structured as stated below:
 
 Frame Header format:
-The frame header consists of 5 bytes:
+The frame header consists of 9 bytes:
 
 [Fig. 2_docs_frame_en] (Frame header structure)
 
@@ -724,8 +739,18 @@ Byte: 0-3
   Valid values: A positive Number or 0; Has to be a multiple of 3 as the data of the upcoming body is LED data [TODO: add link to LED data].
     It therefore also has to be <= (number of LEDs connected [TODO: add link] * 3) (as specified in the exchanged configuration [TODO: add link to configuration Values]).
     0 when there is no body (e.g. when the command [TODO: add link] is "disconnect").
+    Causes a frame error byte to be sent if invalid.
 
-Byte: 4
+
+Byte 4-8
+  Name: Frame body offset
+  Type: Integer
+  Description: The offset of the first LED for the data inside the frame body used when applying the frame
+  Valid values: A positive number or 0; Has to be < number of LEDs [TODO: add link].
+    The frame body offset + frame body length /3 should never exceed the number of LEDs [TODO: add link].
+    Causes a frame error byte to be sent if invalid.
+
+Byte: 9
   Name: Command
   Type: Byte
   Description: A byte value specifying a command to be executed before the upcoming LED data gets applied.
@@ -775,7 +800,7 @@ causing the protocol to stop functioning. It therefore has to comply to all spec
 body size [TODO: add link], which state, that the number of bytes always have to be a multiple of 3 and are not allowed to
 exceed the (number of LEDs * 3) [TODO: add link] communicated within the Connection Process [TODO: add link]. If this is not the case,
 a Frame Error Byte [TODO: add link to Frame Error Byte] will be sent instead of the Frame Acknowledgement Byte [TODO: Add link to Frame ack byte] to
-the master device when the frame gets received.
+the master device when the frame gets received, as stated in [Checking the frame body size] [TODO: add link].
 
 
 The 3 Bytes for each LED have the following structure:
@@ -858,6 +883,6 @@ change name
 create wiki
 add Disclaimer
 add licensing
-
-Add clear command
+add offset to frame diagrams
+Add offset to java and arduino implementation
 Add support for led offset in header (only changing some leds in the middle of the strip)
