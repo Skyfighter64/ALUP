@@ -742,7 +742,7 @@ Byte: 0-3
     Causes a frame error byte to be sent if invalid.
 
 
-Byte 4-8
+Byte 4-7
   Name: Frame body offset
   Type: Integer
   Description: The offset of the first LED for the data inside the frame body used when applying the frame
@@ -750,7 +750,7 @@ Byte 4-8
     The frame body offset + frame body length /3 should never exceed the number of LEDs [TODO: add link].
     Causes a frame error byte to be sent if invalid.
 
-Byte: 9
+Byte: 8
   Name: Command
   Type: Byte
   Description: A byte value specifying a command to be executed before the upcoming LED data gets applied.
