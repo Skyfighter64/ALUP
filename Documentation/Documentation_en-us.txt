@@ -883,6 +883,5 @@ change name
 create wiki
 add Disclaimer
 add licensing
-add offset to frame diagrams
-Add offset to java and arduino implementation
-Add support for led offset in header (only changing some leds in the middle of the strip)
+Add offset to arduino implementation
+Test offset implementations
