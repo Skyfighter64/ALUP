@@ -743,8 +743,8 @@ Byte: 4
         Description: Command indicating that no Command should be executed
 
         Value: 1
-        Name: [RESERVED]
-        Description: Protocol command values reserved for future use.
+        Name: Clear
+        Description: Command setting all LED values to 0
 
         Value: 2
         Name: Disconnect
