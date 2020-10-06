@@ -883,5 +883,4 @@ change name
 create wiki
 add Disclaimer
 add licensing
-Add offset to arduino implementation
 Test offset implementations
