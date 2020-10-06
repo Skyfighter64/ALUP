@@ -267,7 +267,7 @@ Checking the frame body offset:
 
 The frame body offset indicates, by how much LEDs the sent data should be offset from LED 0. It therefore has to be 0 (no offset) or bigger.
 Because the last LED data of the frame should not be bigger than the actual last LED connected to the slave device, the offset + body size / 3
-should be smaller than the number of LEDs [TODO: add links for whole section]. If one of those conditions is not followed, the slave device
+should be smaller or equal to the number of LEDs [TODO: add links for whole section]. If one of those conditions is not followed, the slave device
 sends a frame error byte [TODO: add link] to the master device, indicating that the frame could not be applied, and skips applying the frame.
 
 
