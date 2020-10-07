@@ -884,3 +884,4 @@ create wiki
 add Disclaimer
 add licensing
 Test offset implementations
+Change slave device to set any unhanged leds to black when receiving frame (in docs and implementation)
