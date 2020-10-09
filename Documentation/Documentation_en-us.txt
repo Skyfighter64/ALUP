@@ -225,8 +225,8 @@ Slave Device:
 As soon as the Slave device sent its Configuration acknowledgement, it gets ready to receive frames of LED data in the specified frame format [TODO: add link to Frame docs]
 by waiting for a frame header [TODO: add link to frame header specifications].
 
-Waiting for a header should continue indefinitely until either a disconnect command is received, or a user input like a button press. For
-more, see [Disconnecting] [TODO: add link]. This means that the data transmission loop should never time out on the side of the slave device.
+Waiting for a header should continue indefinitely until either a disconnect command is received, the underlying connection either disconnects or times out,
+or a user input like a button press. For more, see [Disconnecting] [TODO: add link]. This means that the data transmission loop should never time out on the side of the slave device by itself.
 
 
 When receiving the header, it first reads in the size of the frame body and then receives the whole frame body using this size value. It then checks the
@@ -325,8 +325,8 @@ without sending a "disconnect" command to the slave device.
 Disconnecting:
 
 The disconnection process can only be initiated by the master device. When the slave device wants to disconnect, it can simply
-stop responding with frame acknowledgements to time out on the master device. This way of disconnecting indirectly is used for
-the ease of implementation.
+stop responding with frame acknowledgements to time out on the master device, or kill the underlying connection if possible. This way of
+disconnecting indirectly is used for the ease of implementation.
 
 
 When the master device wants to disconnect, it sends an empty frame with a "disconnect" command [TODO: add link] to the Slave Device and then disconnects
