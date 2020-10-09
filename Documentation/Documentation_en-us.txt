@@ -769,7 +769,9 @@ Byte: 8
 
         Value: 1
         Name: Clear
-        Description: Command setting all LED values to 0
+        Description: Command setting all LED values to 0 before applying the frame body.
+          This means, that, if the body is empty, all LEDs get set to black, and if the body contains LED data, all unchanged LEDs
+          get set to black.
 
         Value: 2
         Name: Disconnect
@@ -890,3 +892,6 @@ Add feature for making all other leds black before applying new frame when clear
 
 Add delay depending on led strip ( add it before the frame ack on the slave device)
 Timeout for slave main loop?
+
+
+arduino bug: disconnect not working after clear command without delay
