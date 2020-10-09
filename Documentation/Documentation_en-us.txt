@@ -884,8 +884,5 @@ TODOs until release:
 change name
 create wiki
 create git for arduino implementation
-create git for java implementation
 add Disclaimer
 add licensing
-Change slave device to set any unhanged leds to black when receiving frame (in docs and implementation)
-Add feature for making all other leds black before applying new frame when clear is sent with a non-empty frame
