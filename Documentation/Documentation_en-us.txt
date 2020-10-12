@@ -406,9 +406,8 @@ official implementations.
 ------------------[Official Implementation Standard]------------------
 
 Core values:
-- Your implementation has to be open source
-- Your implementation has to be free to use for anyone
-- Your implementation has to properly implement this protocol (for compatibility reasons)
+- All official implementations are open source
+- All official implementations are  free to use for anyone
 
 
 Documentation:
