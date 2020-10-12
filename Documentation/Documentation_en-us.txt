@@ -420,7 +420,6 @@ has to contain the following points:
 
 Specifications:
   - protocol version used
-  - programming language used (as this is probably the point where most implementations will differ)
   - hardware compatibility (e.g. which devices can be used)
   - software compatibility, dependencies (e.g. which OS is supported, which programs are needed)
   - compatible connection types (e.g. Wi-Fi, USB, etc.)
@@ -430,10 +429,10 @@ Specifications:
 Guidance:
   - installation guide
   - configuration guide along with a list of all by the user tweakable variables along with valid values and default values.
-  - (if needed) configuration changes which have to be made to the other device (e.g. adding code for special subcommands)
+  - (if needed) configuration changes which have to be made to the other device (e.g. adding code for special subcommands required by the implementation)
 
   - how to use the implementation
-  - at least one easy example on how to use it(the more the better)
+  - at least one easy example on how to use it (the more the better)
   - some simple troubleshooting help or FAQ
 
 Protocol specific:
@@ -882,6 +881,5 @@ TODOs until release:
 
 change name
 create wiki
-create git for arduino implementation
 add Disclaimer
 add licensing
