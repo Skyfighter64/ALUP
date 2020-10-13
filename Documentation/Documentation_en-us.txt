@@ -419,7 +419,7 @@ has to contain the following points:
 
 
 Specifications:
-  - protocol version used
+  - protocol version used / compatible protocol versions
   - hardware compatibility (e.g. which devices can be used)
   - software compatibility, dependencies (e.g. which OS is supported, which programs are needed)
   - compatible connection types (e.g. Wi-Fi, USB, etc.)
@@ -456,6 +456,8 @@ Code style:
   - use a consistent coding style
   - please add comments to your code to help others understand it
 
+
+And any other missing points named by the project maintainers upon inspection.
 
 License:
 We want all official implementations to be usable for anyone, therefore your implementation should use one of the following licenses:
