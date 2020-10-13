@@ -457,6 +457,11 @@ Code style:
   - please add comments to your code to help others understand it
 
 
+Libraries and external resources:
+  - only use external resources and libraries which you are allowed to redistribute (see the licensing info of each resource).
+  - only use external resources and libraries which can be used commercially and non-commercially
+
+
 And any other missing points named by the project maintainers upon inspection.
 
 License:
