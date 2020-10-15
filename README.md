@@ -40,3 +40,8 @@ If you want to control LEDs as just described, you can use an implementation of 
 - It does not offer control for lost/corrupted packages
 
 - It only supports RGB (RGBW Support may be added in the future)
+
+
+## License
+
+This project is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). For more information, see [LICENSE] (TODO: add link)
