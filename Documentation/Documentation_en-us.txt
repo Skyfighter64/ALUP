@@ -9,9 +9,9 @@ Version: 0.1 (internal)
 
 ----------[Overview]------------
 
-The ALUP (Arduino LED USB Protocol, name may change) is a Protocol which handles connection-based transmission of RGB data.
+The ALUP (Arduino LED USB Protocol, name may change) is a protocol which handles connection-based transmission of RGB data.
 
-It's goal is to make it possible for almost any device to control an LED strip, even if this device has no digital Pins like an
+It's goal is to make it possible for almost any device to control an LED strip, even if this device has no digital pins like an
 Arduino or Raspberry Pi, by using a device with such digital pins as a proxy (middle-man).
 
 [Fig. 1_en] (two devices connected to each other over a wired connection along with connected leds to the slave device)
