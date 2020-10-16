@@ -17,7 +17,7 @@ Copyright 2020 Skyfighter64
 --------------------------------------------------------------------------------
 en-us
 
-Project documentation for ALUP - Arduino LED UART Protocol (name may change)
+Project documentation for ALUP - Arduino LED USB Protocol (name may change)
 
 Version: 0.1 (internal)
 
