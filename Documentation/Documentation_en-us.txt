@@ -890,10 +890,6 @@ may have a significant impact on performance and frame rates of the LEDs.
 
 
 
-----------[Licensing]------------
-> Licensing information (maybe in separate file)
-
-
 ----------[Future ideas]------------
 Normal led Support
 
