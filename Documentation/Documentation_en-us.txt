@@ -27,12 +27,12 @@ Version: 0.1 (internal)
 
 The ALUP (Arduino LED USB Protocol, name may change) is a protocol which handles connection-based transmission of RGB data.
 
-It's goal is to make it possible for almost any device to control an LED strip, even if this device has no digital pins like an
-Arduino or Raspberry Pi, by using a device with such digital pins as a proxy (middle-man).
+It's goal is to make it possible for almost any device to control an LED strip, even if this device has no GPIO pins like an
+Arduino or Raspberry Pi, by using a device with GPIO pins as a proxy (middle-man).
 
 [Fig. 1_en] (two devices connected to each other over a wired connection along with connected leds to the slave device)
 
-The original use was to control individually addressable LEDs like ws2812b with
+The original use was to control individually addressable LEDs like WS2812b with
 any kind of computer over a USB connection using an Arduino as a proxy.
 
 If you want to control LEDs as just described, you can use an implementation of this protocol in your project. For more, see [Implementations] [TODO: add link]
@@ -44,7 +44,7 @@ Features:
 - It's connection based, meaning it first establishes a connection between two devices using some
     initial parameters (as described in [Detailed documentation]) and then sends RGB Data continuously
 
-- It's a transport layer protocol, therefore independent of the type of physical connection.
+- It's an application layer protocol, therefore independent of the type of physical connection.
     For the requirements it has for the physical connection and underlying protocols, see [Requirements]
 
 - Support for custom configuration values (See: [Configuration format])
@@ -52,7 +52,7 @@ Features:
 
 
 Properties:
-- Its use is to transmit RGB data
+- Used for transmitting RGB data
 - It is master-slave based which means one of the two connected devices takes the role of the master (aka the data sender)
     and the other one the role of the slave (the data receiver)
 
@@ -102,7 +102,7 @@ Setup:
 
 
 ----------------[Protocol Workflow]----------------
-This section explains how the protocol works in detail by explaining what's going on on each device during each
+This section explains how the protocol works in detail by explaining what each device does during each
 of the 3 processes. Those processes are:
 
 - Connecting [TODO: add link]
@@ -121,7 +121,7 @@ Those are the basics of this protocol. They are explained again but in more deta
 
 
 
-General Note: all timeouts (unless stated explicitly) are defined by the protocol implementation itself. If implementing this protocol,
+General Note: all timeout values (unless stated explicitly) are defined by the protocol implementation itself. If implementing this protocol,
 it is advised to use a timeout of multiple seconds for the best results.
 
 
