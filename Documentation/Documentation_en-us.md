@@ -63,7 +63,7 @@ The ALUP describes a way how the RGB data gets from the PC (master device) to th
 
 - __Custom configurations:__ Programs can add custom configuration values. See: [Configuration format].
 
-- __Subprograms:__ Execute your own code on the microcontroller while sending RGB data. See: [Subprograms](#Subprograms).
+- __Subprograms:__ Execute your own code on the microcontroller while sending RGB data. See: [Subprograms](#Subprograms_link).
 
 #### Properties:
 - __Master-slave based:__ One of the two devices takes the role of the master (the sender) and the other one the role of the slave (the receiver).
@@ -877,7 +877,7 @@ Therefore, the byte at index 121 represents the Green Channel of LED 40.
 
 
 
-## <a name="Subprograms"></a>Subprograms
+## <a name="Subprograms_link"></a>Subprograms
 This sections explains subprograms and subcommands.
 
 The protocols supports little subprograms that can be executed whenever a Frame is received by sending a Subcommand [TODO: add Link]
