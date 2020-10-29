@@ -553,10 +553,13 @@ Features:
 
 This section contains definitions and constants of the protocol
 
+:information_source: Note: Those definitions do not apply for the use of an implementation of the protocol, they only do for
+sending and receiving data using the protocol (describing in which format data is sent and received).
+Therefore they are only relevant if you are writing an implementation of the protocol.
 
 ### <a name="General_Definitions_link"></a>General Definitions:
 
- <a name="RGB_Data_link"></a> RGB data:
+#### <a name="RGB_Data_link"></a> RGB data:
 One or multiple sets of 3 bytes representing the R, G and B value for a LED each within a range of 0-255
 
 Byte nr. | Color
@@ -565,32 +568,32 @@ Byte nr. | Color
 1 | Green
 2 | Blue
 
+//TODO: add byte indexes to the image and delete table
+
 <img src="./media/general/en/rgb_values.svg" alt="An RGB triple" height=25%>
 
 
-Subcommand:
+#### Subcommand:
 A command with an ID corresponding to a Subprogram sent inside of a Frame Header to execute the Subprogram.
 For more information, see [Subprograms](#Subprograms_link).
 
-Subprogram:
+####Subprogram:
 A small Program which gets executed on the Slave device when a Subcommand with its ID gets received
 For more information, see [Subprograms](#Subprograms_link).
 
 
 
-Definitions for data transmission:
+### <a name="Data_Transmissions_Definitions_link"></a>Definitions for data transmission:
 All mentions of the data types within this documentation refer to the definitions below if not stated otherwise.
 
-Note: Those definitions do not apply for the use of an implementation of the protocol, they only do for
-sending and receiving data using the protocol (describing in which format data is sent and received).
-Therefore they are only relevant if you are writing an implementation of the protocol.
+
 
 
 
 #### String:
 A string is a combination of UTF-8 encoded characters followed by a null byte used as terminator.
 String data has a dynamic length; The end of a string is marked with a Null byte (0x00) as a terminator.
-Therefore: When sending String data, send a Null byte (0x00) afterwards if it is not done by the used programming language itself.
+Therefore: When sending String data, send a Null byte (`0x00`) afterwards if it is not done by the used programming language itself.
 
 <img src="./media/general/en/string.svg" alt="A string as defined above" height=25%>
 
