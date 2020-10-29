@@ -27,7 +27,7 @@ __Version: 0.1 (internal)__
 
 The ALUP (Arduino LED USB Protocol, name may change) is a protocol for simple transmission of RGB data.
 
-It can be used to make it possible for almost any device, like a computer or phone, to play real-time animations on addressable LED strips. However, this protocol is just a text which defines how the data transmission for such a purpose can work. For more info's on implementations, see [Implementations](#Implementations_link). and [Projects](TODO: add link and section).
+It can be used to make it possible for almost any device, like a computer or phone, to play real-time animations on addressable LED strips. However, this protocol is just a text which defines how the data transmission for such a purpose can work. For more info's on implementations, see [Implementations](#Implementations_link). and [Projects](#Projects_link).
 
 ## Table of contents
 - TODO:
@@ -425,7 +425,6 @@ Slave Device:
 > Brief description of each implementation
 > Most important requirements of each implementation (Which Programming Language(s) it's designed for / Operating System / Programs it depends on)
 
-
 ### <a name="Creating_An_Implementation_link"></a>Creating an implementation:
 
 Generally, we want to encourage anyone to write their own implementation of the protocol using this documentation,
@@ -513,7 +512,6 @@ We want all official implementations to be usable for anyone, therefore your imp
 
 
 
-
 ## <a name="Configuration_link"></a>Configuration
 This section is about configuring implementations of the protocol. For the protocol configuration format, see [Configuration Format]
 
@@ -524,6 +522,10 @@ documentation of each used implementation for configuring both devices.
 Generally, the values defined at [Configuration Format] do have to be configured on the slave device according to their definitions.
 This will also be explained in the documentation of the used implementation for the slave device
 
+
+## <a name="Projects_link"></a>Projects
+Here are some cool projects using this protocol:
+- (Projects will be added here)
 
 
 ## <a name="Contributing_link"></a>Contributing
@@ -803,7 +805,7 @@ Byte 4-7
   - Description: The offset of the first LED for the data inside the frame body used when applying the frame
   - Valid values: A positive number or 0; Has to be < [`number of LEDs`](#Number_Of_Leds_link).
 
-    :warning: The frame body offset + frame body length /3 should never exceed the number of LEDs [TODO: add link].
+    :warning: The frame body offset + frame body length /3 should never exceed the [number of LEDs](#Number_Of_Leds_link).
 
     :warning: Causes a frame error byte to be sent if invalid.
 
@@ -846,7 +848,7 @@ starting at the LED with the index 0 up to the LED with an index of (Frame Body 
 The size of the Body always has to be the Size specified in the Header, otherwise the Data will desynchronize and unexpected behavior will occur
 causing the protocol to stop functioning. It therefore has to comply to all specifications stated in the documentation of the [`Frame Body size`](#Frame_Body_Size_link), which state, that the number of bytes always have to be a multiple of 3 and are not allowed to
 exceed the [`number of LEDs * 3`](#Number_Of_Leds_link) communicated within the [Connection Process](#Connecting_link). If this is not the case,
-a Frame Error Byte [TODO: add link to Frame Error Byte] will be sent instead of the [`Frame Acknowledgement Byte`](#Frame_Acknowledgement_Byte_link) to
+a [`Frame Error Byte`](#Frame_Error_Byte_link) will be sent instead of the [`Frame Acknowledgement Byte`](#Frame_Acknowledgement_Byte_link) to
 the master device when the frame gets received. For more, see [Data Transmission](#Data_Transmission_link).
 
 
