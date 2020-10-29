@@ -565,16 +565,16 @@ Byte nr. | Color
 1 | Green
 2 | Blue
 
-[Fig. 1_docs_general_en] (a RGB data triple)
+<img src="./media/general/en/rgb_values.svg" alt="An RGB triple" height=25%>
 
 
 Subcommand:
 A command with an ID corresponding to a Subprogram sent inside of a Frame Header to execute the Subprogram.
-For more information, see [Subprograms]
+For more information, see [Subprograms](#Subprograms_link).
 
 Subprogram:
 A small Program which gets executed on the Slave device when a Subcommand with its ID gets received
-For more information, see [Subprograms]
+For more information, see [Subprograms](#Subprograms_link).
 
 
 
@@ -600,27 +600,26 @@ Therefore: When sending String data, send a Null byte (0x00) afterwards if it is
 #### Integer:
 An integer number is a 32-bit 2s-compliment number.
 
-[Fig. 3_docs_general_en] (An integer as defined above)
+<img src="./media/general/en/integer.svg" alt="An integer as defined above" height=25%>
 
-<img src="./media/general/en/string.svg" alt="An integer as defined above" height=25%>
 
-Long:
+#### Long:
 A long is a 64bit 2s-compliment number.
 
-[Fig. 4_docs_general_en] (A long as defined above)
+<img src="./media/general/en/long.svg" alt="A long as defined above" height=25%>
 
-Short:
+#### Short:
 A short is a 16bit 2s-compliment number.
 
-[Fig. 5_docs_general_en] (A short as defined above)
+<img src="./media/general/en/short.svg" alt="A short as defined above" height=25%>
 
-byte:
+#### Byte:
 A byte is a 8bit unsigned number ranging from 0 to 255.
 
-[Fig. 6_docs_general_en] (A byte as defined above)
+<img src="./media/general/en/byte.svg" alt="A byte as defined above" height=25%>
 
 
-This is important because:
+:information_source: This is important because:
 - while most architectures do use this definition, depending on the board, the architecture of the Arduino may use 16-bit numbers as integer.
 Therefore, when you want to send integer data, you may actually have to use variables of the type long (32bit-integer) on the Arduino
 and int (32bit-integer) on the master system. At the end, the actual bit length of the types has to match.
