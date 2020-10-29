@@ -587,20 +587,22 @@ Therefore they are only relevant if you are writing an implementation of the pro
 
 
 
-String:
+#### String:
 A string is a combination of UTF-8 encoded characters followed by a null byte used as terminator.
 String data has a dynamic length; The end of a string is marked with a Null byte (0x00) as a terminator.
 Therefore: When sending String data, send a Null byte (0x00) afterwards if it is not done by the used programming language itself.
 
-Note: Large Strings can have a significant impact on performance
+<img src="./media/general/en/string.svg" alt="A string as defined above" height=25%>
 
-[Fig. 2_docs_general_en] (A string as defined above)
+:warning: Note: Large Strings can have a significant impact on performance
 
 
-Integer:
+#### Integer:
 An integer number is a 32-bit 2s-compliment number.
 
 [Fig. 3_docs_general_en] (An integer as defined above)
+
+<img src="./media/general/en/string.svg" alt="An integer as defined above" height=25%>
 
 Long:
 A long is a 64bit 2s-compliment number.
