@@ -36,7 +36,7 @@ It can be used to make it possible for almost any device, like a computer or pho
 
 ## Overview
 
-<img src="./media/general/en/Protocol Overview.svg" alt="An integer as defined above" height=10% scale=5%>
+<img src="./media/general/en/Protocol Overview.svg" alt="An integer as defined above" height=800px>
 
 Generally, you have two devices:
 - A master device, which wants to control a addressable LED strip, but can't because it's lacking connectivity
