@@ -36,6 +36,8 @@ It can be used to make it possible for almost any device, like a computer or pho
 
 ## Overview
 
+<img src="./media/general/en/Protocol Overview.svg" alt="An integer as defined above" height=10% scale=5%>
+
 Generally, you have two devices:
 - A master device, which wants to control a addressable LED strip, but can't because it's lacking connectivity
   - Examples: PC, Smartphone.
@@ -553,9 +555,7 @@ Features:
 
 This section contains definitions and constants of the protocol
 
-:information_source: Note: Those definitions do not apply for the use of an implementation of the protocol, they only do for
-sending and receiving data using the protocol (describing in which format data is sent and received).
-Therefore they are only relevant if you are writing an implementation of the protocol.
+
 
 ### <a name="General_Definitions_link"></a>General Definitions:
 
@@ -583,9 +583,12 @@ For more information, see [Subprograms](#Subprograms_link).
 
 
 
-### <a name="Data_Transmissions_Definitions_link"></a>Definitions for data transmission:
+### <a name="Data_Transmission_Definitions_link"></a>Definitions for data transmission:
 All mentions of the data types within this documentation refer to the definitions below if not stated otherwise.
 
+:information_source: Note: Those definitions do not apply for the use of an implementation of the protocol, they only do for
+sending and receiving data using the protocol (describing in which format data is sent and received).
+Therefore they are only relevant if you are writing an implementation of the protocol.
 
 
 
