@@ -41,28 +41,13 @@ If you just want to use it, see:
 
 <img src="./media/general/en/Protocol Overview.svg" alt="An integer as defined above" height=800px>
 
-
-Overview Example
-
-
-You need two devices:
-- A master device
-  - Needs a way to communicate with the slave device
-  - Doesn't need to be able to control addressable LEDS natively
-  - Examples: PC, Smartphone.
-
-- A slave device
-  - Needs a way to communicate with the master device
-  - Can control addressable LEDs
-  - Examples: Arduino Microcontroller, ESP8266.
-
 #### Example Usecase:
-The master device want's to control addressable LED strips, but can't because it has no way to connect to the LEDs directly, like GPIO pins, whereas the slave device
-has this connectivity, but lacks other features or performance which are needed.
+You want to control addressable LED strips using your computer, but can't because it has no way to connect to the LEDs directly, like GPIO pins, whereas an arduino
+can control adressable LEDs, but lacks features or performance which are needed.
 
 This is where this protocol comes in.
 
-The ALUP describes a way how the RGB data gets from the PC (master device) to the Microcontroller (slave device) over any kind of connection like USB or Wi-Fi, which then can apply the RGB values to the LEDs. This makes it possible for the PC to control the addressable LEDs indirectly.    
+The ALUP describes a way how the RGB data gets from the PC (master device) to the Microcontroller (slave device) over any kind of connection like USB or Wi-Fi, which then applies the RGB values to the LEDs. This makes it possible for the PC to control the addressable LEDs indirectly.    
 
 [Fig. 1_en] (two devices connected to each other over a wired connection along with connected LEDs to the slave device)
 
@@ -94,25 +79,24 @@ The **protocol** has the following hardware requirements:
 #### Connection Requirements:
 There are no strict requirements for the connection type used.
 
+The ALUP has built in congestion control, but no checks for package loss. Therefore, any used connection has to be reliable.
 
-It has built in congestion control, but no checks for package loss. Therefore, any used connection has to be reliable.
 
-
-## Definitions
-This section gives a list of all special terms used within this protocol to better understand this document.
+## Terminology
+This section gives a list of the most important terms used within this protocol to better understand this document.
 
  __Term__ | Example | Description
  -----|---------|-------------
  __RGB data__ | `R:255, B:123, G:0` | One or multiple triplets of 8bit color values, represented in the RGB format. For more, see [RGB Data](#RGB_Data_link)
- __Master Device__ | PC, Smartphone | The device which sends __RGB data__ to the __slave device__
- __Slave Device__ | Arduino, ESP8266 | The device which receives the __RGB data__ from the __master device__ and applies it to the LEDs.
- __(Physical) Connection__ | USB, Wi-Fi  | The physical connection between the __master device__ and the __slave device__ (This includes the entire protocol stack for data transmission).
+ __Master Device__ | PC, Smartphone | The device which __sends__ RGB data to the slave device
+ __Slave Device__ | Arduino, ESP8266 | The device which __receives__ the RGB data from the master device and applies it to the LEDs.
+ __(Physical) Connection__ | USB, Wi-Fi  | The connection between the __master device__ and the __slave device__ (Includes the entire protocol stack for data transmission).
   |  |
- __Frame__ | - | A set of data which gets sent from the __master device__ to the __slave device__. Consists of a __frame header__  and a __frame body__. For more, see [Frame](#Frame_link).
- __Frame Header__ | - | The part of the __frame__ containing special information. For more, see [Frame](#Frame_link).
- __Frame Body__ | - | The part of the __frame__ which contains __RGB data__. For more, see [Frame](#Frame_link).
+ __Frame__ | - | A set of data which gets sent from the master device to the slave device. Consists of a __frame header__  and a __frame body__. For more, see [Frame](#Frame_link).
+ __Frame Header__ | - | The part of the frame containing special information. For more, see [Frame](#Frame_link).
+ __Frame Body__ | - | The part of the frame which contains RGB data. For more, see [Frame](#Frame_link).
   |  |
- __Command__ | - | Can be sent with every __frame__ in its __frame header__. Can be either a __protocol command__ or a __subcommand__.
+ __Command__ | - | A command within the frame header. Can be either a __protocol command__ or a __subcommand__.
  __Subcommand__ | - | A __command__ which tells the __slave device__ to execute a custom predefined __subprogram__. See [Subprograms](#Subprograms_link).
  __Protocol Command__ | - | A special type of __command__ which tells the __slave device__ to execute a protocol-defined task. For more, see [Protocol Commands](#Protocol_Commands_link).
  __Subprogram__ | - | Custom, Predefined code which gets executed when a specific __subcommand__ gets received. Each subprogram has its own __subcommand__. For more, see [Subprograms](#Subprograms_link).
