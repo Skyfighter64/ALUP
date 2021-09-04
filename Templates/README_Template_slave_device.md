@@ -16,10 +16,8 @@ Copyright 2020 Skyfighter64
 
 --------------------------------------------------------------------------
 
-This file is an example README file for slave device implementations of the ALUP according to its official implementation standard
-
-This is NOT a form to just be filled and does not guarantee compliance with the official implementation standard just by using it. You can
-add/remove anything you'd like. Just make sure it complies with the official implementation standard.
+This file is an example README file for slave device implementations of the ALUP.
+You can add/remove anything you'd like.
 
 For an example, see [Arduino-ALUP](https://github.com/Skyfighter64/Arduino-ALUP/blob/master/README.md)
 
@@ -93,14 +91,12 @@ Hardware:
 :warning: You may need additional components like an external power supply depending on your used hardware.
 
 
-
-
 ## Installation
 
 
 ### DISCLAIMER
 
-[add installation disclaimer here if needed]
+[add installation disclaimer, disclaimer for working with external psu's, etc. here if needed]
 
 
 1. [How ]
@@ -149,7 +145,7 @@ Function | ID | Description
 
 #### Adding your own subprograms
 
-The following guide will show you how to add your own subprograms to this sketch. If you want to learn more about subprograms and subcommands, visit the [ALUP Documentation] (...) (TODO: ad link here)
+The following guide will show you how to add your own subprograms to this sketch. If you want to learn more about subprograms and subcommands, visit the [ALUP Documentation] (...)
 
 1. [Guide on how to]
 2. [add subprograms yourself]
@@ -163,7 +159,7 @@ The following guide will show you how to add your own subprograms to this sketch
 
 ## Contributing
 
-If you want to contribute to this project, please see CONTRIBUTING.md (TODO: add link)
+If you want to contribute to this project, please see CONTRIBUTING.md
 
 
 ## Credits
@@ -172,4 +168,4 @@ If you want to contribute to this project, please see CONTRIBUTING.md (TODO: add
 
 ## License
 
-This project is licensed under [add license here]. For more information, see LICENSE (TODO: add link)
+This project is licensed under [add license here]. For more information, see LICENSE

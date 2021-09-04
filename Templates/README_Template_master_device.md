@@ -16,10 +16,8 @@ Copyright 2020 Skyfighter64
 
 --------------------------------------------------------------------------
 
-This file is an example README file for master device implementations of the ALUP according to its official implementation standard.
-
-This is NOT a form to just be filled and does not guarantee compliance with the official implementation standard just by using it. You can
-add/remove anything you'd like. Just make sure it complies with the official implementation standard.
+This file is an example README file for master device implementations of the ALUP.
+You can add/remove anything you'd like.
 
 For an example, see [Java-ALUP](https://github.com/Skyfighter64/Java-ALUP/blob/master/README.md)
 
@@ -67,7 +65,7 @@ Device | Confirmed working | Comments
 [device name]      | [yes/no]] |  [special instructions, comments]
 
 
-### Supported LED strips
+### Supported LEDs
 
  * (optional) [List of supported LED chipsets]
 
@@ -97,19 +95,15 @@ Additional timeouts | [timeout value]
 
 ## Installation
 
-### DISCLAIMER
 
-[add installation disclaimer here]
-
-
-1. Download the latest library build from [here] (TODO: add link to releases)
+1. Download the latest library version from [here]
 2. Include the downloaded library in your project
 
 ## Configuration
 
 ### Configuration values:
 
-[A list of all configurable values and how to change them]
+[A list of the configuration values specific to this implementation and a guide on how to change them]
 
 
 Name | Default value | Valid values | Description
@@ -145,7 +139,7 @@ If you want to add your own subprograms, please follow the guide of your used sl
 
 #### Calling your own subprograms
 
-* [Step by step guide on how to execute subprograms]
+* [Guide on how to execute subprograms]
 
 * [Additional information]
 
@@ -153,7 +147,7 @@ If you want to add your own subprograms, please follow the guide of your used sl
 
 [How to use]
 [How to create your first program]
-[link to the documentation of all accessible functions, classes and values]
+[link to the API documentation]
 
 ### Examples:
 [Simple examples, or link to examples]
@@ -161,7 +155,7 @@ If you want to add your own subprograms, please follow the guide of your used sl
 
 ## Contributing
 
-If you want to contribute to this project, please see CONTRIBUTING.md (TODO: add link)
+If you want to contribute to this project, please see CONTRIBUTING.md
 
 
 ## Credits
