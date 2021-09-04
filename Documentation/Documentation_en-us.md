@@ -1,4 +1,3 @@
-
 > Copyright 2021 Skyfighter64
 >
 >   Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,9 +24,13 @@ __Version: 0.1 (internal)__
 
 ## Description
 
-The ALUP (Arduino LED USB Protocol, name may change) is a protocol for simple transmission of RGB data.
+The ALUP (Arduino LED USB Protocol, name may change) is a protocol for transmission of RGB data.
+It can be used to let almost any device control addressable LED strips.
 
-It can be used to make it possible for almost any device, like a computer or phone, to play real-time animations on addressable LED strips. However, this protocol is just a text which defines how the data transmission for such a purpose can work. For more info's on implementations, see [Implementations](#Implementations_link). and [Projects](#Projects_link).
+
+This document defines the protocol itself.
+If you just want to use it, see:
+[ALUP Implementations](#Implementations_link) and [Projects using ALUP](#Projects_link).
 
 ## Table of contents
 - TODO:
@@ -38,13 +41,23 @@ It can be used to make it possible for almost any device, like a computer or pho
 
 <img src="./media/general/en/Protocol Overview.svg" alt="An integer as defined above" height=800px>
 
-Generally, you have two devices:
-- A master device, which wants to control a addressable LED strip, but can't because it's lacking connectivity
+
+Overview Example
+
+
+You need two devices:
+- A master device
+  - Needs a way to communicate with the slave device
+  - Doesn't need to be able to control addressable LEDS natively
   - Examples: PC, Smartphone.
-- A slave device, which has GPIO pins and the ability to control addressable LEDs, but lacks the performance or features for a project
+
+- A slave device
+  - Needs a way to communicate with the master device
+  - Can control addressable LEDs
   - Examples: Arduino Microcontroller, ESP8266.
 
-As said, the master device want's to control addressable LED strips, but can't because it has no way to connect to the LEDs directly, like GPIO pins, whereas the slave device
+#### Example Usecase:
+The master device want's to control addressable LED strips, but can't because it has no way to connect to the LEDs directly, like GPIO pins, whereas the slave device
 has this connectivity, but lacks other features or performance which are needed.
 
 This is where this protocol comes in.
@@ -56,72 +69,53 @@ The ALUP describes a way how the RGB data gets from the PC (master device) to th
 
 
 
-## Features & Limits
+## Features
+- __Flexible:__ Almost any connection such as USB or Wi-Fi can be used.
 
-#### Features:
-- __Connection based:__ It first establishes a connection between two devices and then sends RGB Data continuously.
-
-- __Operating on the application layer:__ Almost any type of physical connection such as USB or Wi-Fi can be used.
-
-- __Custom configurations:__ Programs can add custom configuration values. See: [Configuration format](#Configuration_Format_link).
-
-- __Subprograms:__ Execute your own code on the microcontroller while sending RGB data. See: [Subprograms](#Subprograms_link).
-
-#### Properties:
-- __Master-slave based:__ One of the two devices takes the role of the master (the sender) and the other one the role of the slave (the receiver).
-
-- __Unidirectional:__ RGB data is only sent in one direction.
-
-
-#### Limitations:
-- __RGB only.__ RGBW Support may be added in the future
-
-
+- __Customizable:__ Programs can add custom configuration values and trigger pre-written scripts on the slave device.
 
 ## Requirements
 A list of requirements for the protocol.
 
 
 #### Hardware requirements:
-The protocol has the following hardware requirements:
+The **protocol** has the following hardware requirements:
 
 - Master device
-    - e.g. a windows pc
+    - e.g. a Windows PC
 
 - Slave device
     - Has to be able to control addressable LEDs
-    - e.g. Arduino microcontroller
+    - e.g. Arduino, ESP32, ...
 
-- Data connection between the devices
-    - e.g. USB, UART, Wi-Fi (TCP), etc.
+- Connection between devices
+    - e.g. USB, UART, Wi-Fi, Bluetooth etc.
 
 #### Connection Requirements:
-This protocol has the following requirements for data connections:
-
-- Error-Free transmission
-- In-order transmission
-- No package loss
+There are no strict requirements for the connection type used.
 
 
+It has built in congestion control, but no checks for package loss. Therefore, any used connection has to be reliable.
 
-## Special Terms
+
+## Definitions
 This section gives a list of all special terms used within this protocol to better understand this document.
 
  __Term__ | Example | Description
  -----|---------|-------------
- __RGB data__ | `R:255, B:123, G:0` | One or multiple triples of 8bit color values, represented in the RGB format, which this protocol is all about. For more, see [RGB Data](#RGB_Data_link)
- __Master Device__ | PC, Smartphone | The device which sends __RGB data__ to the __slave device__ to have it displayed on the LED strip.
- __Slave Device__ | Arduino, ESP8266 | The device which will receive the __RGB data__ from the __master device__ and apply it to the LEDs.
- __Physical Connection__ | USB, Wi-Fi  | The type of physical connection between the __master device__ and the __slave device__ which the protocol uses. This includes the entire protocol stack needed for data transmission.
+ __RGB data__ | `R:255, B:123, G:0` | One or multiple triplets of 8bit color values, represented in the RGB format. For more, see [RGB Data](#RGB_Data_link)
+ __Master Device__ | PC, Smartphone | The device which sends __RGB data__ to the __slave device__
+ __Slave Device__ | Arduino, ESP8266 | The device which receives the __RGB data__ from the __master device__ and applies it to the LEDs.
+ __(Physical) Connection__ | USB, Wi-Fi  | The physical connection between the __master device__ and the __slave device__ (This includes the entire protocol stack for data transmission).
   |  |
- __Frame__ | - | A full set of data which gets sent from the __master device__ to the __slave device__. Consists of a __frame header__  and a __frame body__. For more, see [Frame](#Frame_link).
- __Frame Header__ | - | The part of the __frame__ which contains special information for this frame. For more, see [Frame](#Frame_link).
+ __Frame__ | - | A set of data which gets sent from the __master device__ to the __slave device__. Consists of a __frame header__  and a __frame body__. For more, see [Frame](#Frame_link).
+ __Frame Header__ | - | The part of the __frame__ containing special information. For more, see [Frame](#Frame_link).
  __Frame Body__ | - | The part of the __frame__ which contains __RGB data__. For more, see [Frame](#Frame_link).
   |  |
- __Command__ | - | One command can be sent with every __frame__ inside its __frame header__. It can be either a __protocol command__ or a __subcommand__.
- __Subcommand__ | - | A type of __command__ which tells the __slave device__ to execute a specific __subprogram__. [Subprograms](#Subprograms_link).
- __Protocol Command__ | - | A special type of __command__ which tells the __slave device__ to execute a special task. For more, see [Protocol Commands](#Protocol_Commands_link).
- __Subprogram__ | - | A part of the code which gets executed, when a specific __subcommand__ gets received. Each subprogram has its own __subcommand__. For more, see [Subprograms](#Subprograms_link).
+ __Command__ | - | Can be sent with every __frame__ in its __frame header__. Can be either a __protocol command__ or a __subcommand__.
+ __Subcommand__ | - | A __command__ which tells the __slave device__ to execute a custom predefined __subprogram__. See [Subprograms](#Subprograms_link).
+ __Protocol Command__ | - | A special type of __command__ which tells the __slave device__ to execute a protocol-defined task. For more, see [Protocol Commands](#Protocol_Commands_link).
+ __Subprogram__ | - | Custom, Predefined code which gets executed when a specific __subcommand__ gets received. Each subprogram has its own __subcommand__. For more, see [Subprograms](#Subprograms_link).
 
 ## Protocol Workflow
 This section states how the protocol works in detail by explaining what each device does during each
@@ -132,24 +126,19 @@ of the 3 processes. Those processes are:
 - [Disconnecting](#Disconnecting_link)
 
 
-### The Basics:
+### Protocol Flow Overview:
 A quick overview of the protocol workflow.
 When two devices get connected via the physical connection, they first establish a connection and share some important
 configuration data like how many LEDs are connected to the slave device.
 
 If this happened successfully, the master device sends data frames for the LEDs until it disconnects, or the physical connection is interrupted.
 
-When the master device finished sending data frames (e.g. the program on the master device using the protocol gets closed), the master device
-disconnects from the slave device and closes the physical connection.
-
-Those are the basics of this protocol. They are explained again but in more detail below.
-
 
 
 :information_source: General Note: all timeout values (unless stated explicitly) are defined by the protocol implementation itself. If implementing this protocol, it is advised to use a timeout of multiple seconds for the best results.
 
 
-### <a name="Connecting_link"></a>Connecting / Connection process:
+### <a name="Connecting_link"></a>Connecting
 
 Before sending any [RGB data](#RGB_Data_link), both devices need to be connected and configured. This connection process consists of 3 Steps:
 - [Requesting a connection](#Requesting_A_Connection_link)
@@ -164,20 +153,22 @@ Before sending any [RGB data](#RGB_Data_link), both devices need to be connected
 #### <a name="Requesting_A_Connection_link"></a>Requesting a connection:
 
 ##### Slave Device:
-As soon as the physical connection, along with the connection of all underlying protocols (e.g. Serial) is established,
-the Slave device begins to send a [connection request byte](#Connection_Request_Byte_link) and listens for a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) in fixed intervals,
-the size of which can be specified by the implementation itself (e.g.: 0.1s). Sending [connection request bytes](#Connection_Request_Byte_link) and listening for a
-[connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) will not time out and continue indefinitely until a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) was received.
+As soon as the physical connection is established,
+the slave device begins to send a [connection request byte](#Connection_Request_Byte_link) and listens for a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) in fixed intervals.
+The interval size can be specified by the implementation itself (recommended: 0.1s).
+
+Sending [connection request bytes](#Connection_Request_Byte_link) and listening for a
+[connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) will not time out and continue indefinitely until a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) is received.
 
 [Fig. 2_1_en] (Slave device sending a connection request to the master device and waiting for connection acknowledgement)
 
 
 ##### Master Device:
-The master device starts by listening for a single Byte of data containing a [connection request byte](#Connection_Request_Byte_link)
-as soon as the connection is fully established. When receiving a [connection request byte](#Connection_Request_Byte_link), the master device prepares to receive the
+The master device starts by listening for a single Byte of data containing a [connection request byte](#Connection_Request_Byte_link). When receiving a [connection request byte](#Connection_Request_Byte_link), the master device prepares to receive the
 [Configuration](#Configuration_Format_link) next and sends a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) back to the slave device as soon as it is ready to
-receive the configuration. Listening for a connection request byte [connection request byte](#Connection_Request_Byte_link) may time out, but can also continue until one was received. If a
-timeout is used in the end depends on the implementation of the Master Device.
+receive the configuration.
+
+Listening for a connection request byte [connection request byte](#Connection_Request_Byte_link) may time out, but can also continue until one was received. This behavior can be specified by the implementation of the Master Device.
 
 [Fig. 3_en] (Master device sending a connection acknowledgement byte to the Slave device)
 
@@ -186,33 +177,33 @@ timeout is used in the end depends on the implementation of the Master Device.
 #### <a name="Exchanging_The_Configuration_link"></a>Exchanging the configuration:
 
 ##### Slave Device:
-When receiving the [connection acknowledgement](#Connection_Acknowledgement_Byte_link), the slave device stops sending [connection requests](#Connection_Request_Byte_link) and listening for [connection acknowledgements](#Connection_Acknowledgement_Byte_link).
-It now prepares the configuration to be sent in the protocols [Configuration Format](#Configuration_Format_link)
-and sends it as soon as possible. After sending it waits for a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link),
-indicating that the master device received and applied the configuration successfully, or a [configuration error byte](#Configuration_Error_Byte_link),
-indicating that the configuration could not be applied. In the later case, the connection process stops and the slave device
-try's for a new connection attempt by starting at the beginning and sending new connection requests.
-If no configuration acknowledgement byte or configuration error byte was received within a certain timeout, the slave device assumes that the
-connection is dead and also continues by trying for a new connection attempt by starting at the beginning and sending new connection requests.
+When receiving the [connection acknowledgement](#Connection_Acknowledgement_Byte_link), the slave device stops sending [connection request bytes](#Connection_Request_Byte_link) and listening for [connection acknowledgements](#Connection_Acknowledgement_Byte_link).
+
+It sends the configuration in the defined [Configuration Format](#Configuration_Format_link) and waits for either a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link) or a  [configuration error byte](#Configuration_Error_Byte_link).
 
 
 [Fig. 4_en] (Slave sending configuration to master )
 
 ##### Master Device:
-After sending the connection acknowledgement, the master device starts listening for the configuration by listening for a [configuration start byte](#Configuration_Start_Byte_link).
-This byte marks the start of the configuration and is part of the protocol [Configuration Format](#Configuration_Format_link). Upon receiving, the master device also receives
-the configuration values directly followed by it. If there was no configuration start byte received within a certain timeout, the master device assumes that the
-connection is dead and stops the connection process.
+After sending the connection acknowledgement, the master device starts listening for the  [configuration start byte](#Configuration_Start_Byte_link).\
+This byte marks the start of the configuration.
 
-When receiving the configuration in the protocol [Configuration Format](#Configuration_Format_link), the master device stops
-listening for the configuration and initializes everything necessary using the received configuration. As soon as the initialization
-is finished it sends an [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link), indicating that it applied the configuration
-successfully. If the configuration could not be applied, it sends an [configuration error byte](#Configuration_Error_Byte_link) to the Slave device indicating that there was
-a problem while applying the configuration. Reasons for sending a [configuration error byte](#Configuration_Error_Byte_link) may be something like an incompatible protocol version, but are in the end
-defined by the implementation of the master device.
+When receiving the start byte, the master device proceeds by reading in the configuration as defined in the [Configuration Format](#Configuration_Format_link).
 
+If there was no configuration start byte received within a certain timeout, the master device assumes that the
+connection is dead and aborts the connection process.
 
-Note: When implementing you may notify the user via both devices if the configuration could not be applied (e.g. Popup, LEDs blinking, etc.)
+When receiving the configuration, the master device initializes everything necessary using the received configuration. As soon as the initialization
+is finished it sends an [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link), indicating that it applied the configuration successfully.
+
+If the configuration could not be applied, it sends an [configuration error byte](#Configuration_Error_Byte_link) to the Slave device indicating that there was
+a problem while applying the configuration. Reasons for sending a [configuration error byte](#Configuration_Error_Byte_link) are:
+
+- incompatible protocol versions
+- malformed configuration received
+- configuration contains invalid values
+- an error occurred while applying the configuration
+
 
 [Fig. 5_en] (Master applying configuration and sending configuration acknowledgement, slave waiting for configuration acknowledgement )
 
@@ -221,17 +212,24 @@ Note: When implementing you may notify the user via both devices if the configur
 #### <a name="Confirming_The_Configuration_link"></a>Confirming the configuration:
 
 ##### Slave Device:
-If the slave now receives a configuration error Byte, it stops listening to any incoming data and may try to signal the user that
-a configuration error occurred.
+If a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link) is received, the slave device sends an configuration acknowledgement back indicating that
+it is ready to receive Data and moves on to [Data Transmission](#Data_Transmission_link).
 
-When it receives a configuration acknowledgement, it sends an configuration acknowledgement back to the master to indicate that
-the configuration process is now finished and it is ready to receive Data. The connection process is now finished and the device continues
-in the data transmission part.
+If the master device could not apply the configuration, a [configuration error byte](#Configuration_Error_Byte_link) will be received.
+In this case, the slave device aborts the "connection" process and
+waits for a new connection attempt by starting at the [beginning](#Requesting_A_Connection_link) and sending new connection requests.
+
+If no configuration acknowledgement byte or configuration error byte was received within a certain timeout, the slave device assumes that the
+connection is dead and aborts the "connection" process. It then starts at the [beginning](#Requesting_A_Connection_link) by sending new connection requests.
+
+
 
 
 ##### Master Device:
-After sending a configuration acknowledgement byte, the master device listens for a configuration acknowledgement byte from the Slave device.
-When the master receives the configuration acknowledgement from the slave device, the connection is established successfully and the
+After sending a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link) to confirm the configuration, the master device listens for a configuration acknowledgement byte from the slave device.
+
+
+When the master receives a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link), the connection is established successfully and the
 devices are ready to move on to [Data Transmission](#Data_Transmission_link).
 
 
@@ -241,50 +239,50 @@ devices are ready to move on to [Data Transmission](#Data_Transmission_link).
 
 
 
-
+----------------------------------------------------------------
 
 
 ### <a name="Data_Transmission_link"></a>Data transmission:
-Now that the connection is established and the devices are configured, it is time to send [RGB data](#RGB_Data_link) from the master device to the slave device.
-The following text and images will describe the process of sending and receiving [RGB data](#RGB_Data_link) on both devices.
+The following text and images will describe the process of sending and receiving [frames](#Frame_link) on both devices.
 
 The data transmission process has 3 steps:
 
-- [Sending](#Sending_Frames_link)/Receiving a frame
-- Applying the frame
-- Acknowledging the frame
+- [Sending](#Sending_Frames_link)/[Receiving](#Receiving_Frames_link) a frame
+- Applying the frame to the LEDs
+- Frame Acknowledgement
 
 
 [Fig. 1_data_en] (Overview of the Data transmission process)
 
 
-#### <a name="Sending_Frames_link"></a>Sending Frames
-
+#### <a name="Receiving_Frames_link"></a>Receiving Frames
 ##### Slave Device:
-As soon as the Slave device sent its Configuration acknowledgement, it gets ready to receive frames of [RGB data](#RGB_Data_link) in the specified [frame format](#Frame_link) by waiting for a [Frame Header](#Frame_Header_link).
-
-Waiting for a header should continue indefinitely until either a disconnect command is received, the underlying connection either disconnects or times out,
-or a user input like a button press. For more, see [Disconnecting](#Disconnecting_link). This means that the data transmission loop should never time out on the side of the slave device by itself.
-
-
-When receiving the header, it first reads in the size of the frame body and then receives the whole frame body using this size value. It then checks the
-[Command Byte](#Command_Byte_link) of the header if it has the value of a [protocol command](#Protocol_Commands_link) (decimal values 0 - 7)  or the
-value of a [Subcommand](#Subcommands_link) (decimal values 8 - 255).
-The Slave device then executes the protocol command or Subcommand if possible.
-Note that the execution of Subcommands can also happen in parallel to the main program depending on the implementation and is therefore not guaranteed to happen
-before the Frame Body gets applied to the LEDs.
+Receiving frames consists of 4 steps:
+- Receiving frame header
+- Receiving frame body
+- Validating frame body size
+- Acknowledging frame
 
 
-Depending on the command, the Slave device also has to apply the [RGB data](#RGB_Data_link) to the LEDs. To do this, it first validates the length of the frame body and the frame body offset
-given by the header by checking if they comply with the specifications for the [`body size`](#Frame_Body_Size_link) and [`body offset`](#Frame_Body_Offset_link) values and then, if successful, applies the data received
-in the [Frame body](#Frame_Body_link) to the LEDs if needed, using the given offset (This may not apply to [`protocol commands`](#Protocol_Commands_link) such as "disconnect").
+As soon as the Slave device sent its Configuration acknowledgement, it gets ready to receive frames in the [frame format](#Frame_link) by waiting for a [Frame Header](#Frame_Header_link).
 
+Waiting for a header continues indefinitely until a header is received or the underlying connection either disconnects or times out. This means that data transmission never times out on the side of the slave device.
+
+When receiving the fixed-size header, the slave device reads the frame body size from the header and receives the frame body using this size value.
+
+ It then checks the
+[Command Byte](#Command_Byte_link) of the header and executes the given command.
+
+In case of the default command `None`, the slave device checks the body size and body offset to be valid.
 
 #### Checking the frame body size:
 
-The frame body always consists of pairs of 3 bytes which represent RGB values, it's length therefore always has to be a multiple of 3.
-If it's not a multiple of 3, the slave device sends a [`frame error byte`](#Frame_Error_Byte_link) to the master device and deletes the received
-frame body.
+The frame body consists of byte triplets which represent RGB values, it's length therefore always has to be a multiple of 3.
+
+The slave device checks this for the frame body size value from the header.
+
+
+If it's not a multiple of 3, the slave device sends a [`frame error byte`](#Frame_Error_Byte_link) to the master device and deletes the received frame body.
 
 If the Frame data is less than or equal to the `number of LEDs * 3`, the Slave device applies the [RGB data](#RGB_Data_link) to the LEDs and sends a
 Frame Acknowledgement Byte to the master device to indicate for one, that the data was applied and
@@ -297,98 +295,83 @@ This has to be done in order to prevent desynchronisation of the data stream, in
 and the connection would have to be shut down and reestablished manually.
 
 
-It now returns to the start of the Data Transmission to receive the next frame. This continues indefinitely until a "disconnect" protocol command
+It now returns to the start of the Data Transmission to receive the next frame. This continues indefinitely until a `disconnect` protocol command
 gets received.
 
 
-#### Checking the frame body offset:
+#### Applying the frame body:
 
-The [`frame body offset`](#Frame_Body_Offset_link) indicates, by how much LEDs the sent data should be offset from `LED 0`. It therefore has to be 0 (no offset) or bigger.
-Because the [RGB data](#RGB_Data_link) of the frame should not exceed the last LED of the LED strip, the `offset + body size / 3`
-should be smaller or equal to the [`number of LEDs`](#Number_Of_Leds_link). If one of those conditions is not followed, the slave device
-sends a [`frame error byte`](#Frame_Error_Byte_link) to the master device, indicating that the frame could not be applied, and skips applying the frame.
+If the frame body size and frame body offset checks passed, the slave device applies the frame body to the LEDs with the following rules:
+
+  - All LEDs are set to the color as specified in the body in the [RGB format](#RGB_Data_link) if the command is `None` or `Clear` or any other command unless stated otherwise.
+
+  - If there is no color specified for an LED, it shall remain unchanged when the command is `None`. When the command is `Clear`, all non-specified LEDs are set to black (R = 0, G = 0, B = 0).
+
+  - The first LED index is the value of [Frame Body Offset](#Frame_Body_Offset_link). If the first Index exceeds the length of the LED strip, continue without applying LEDs.
+
+  - The last LED index is `Frame Body Offset + (Frame Body Size / 3)`. If the Frame Body data exceeds the length of the LED strip, all exceeding values are ignored.
+
 
 
 
 [Fig. 2_data_en] (Overview of the Data transmission process for the slave device)
 
+-------------------------------
+
+#### <a name="Sending_Frames_link"></a>Sending Frames
 ##### Master Device:
-As soon as the Master Device receives the Configuration acknowledgement from the Slave Device, it begins building [`Data Frames`](#Frame_link) and sends them
-to the Slave Device whenever the program using the Protocol decides to send a Frame, meaning the intervals for sending frames are not fixed.
+As soon as the Master Device receives the Configuration acknowledgement from the Slave Device, it sends [`Data Frames`](#Frame_link) to the Slave Device in undefined intervals.
 
-The header of the frame is built by first looking at the [RGB data](#RGB_Data_link) to be sent and calculating, how many bytes are needed to send this data.
+The [frame header](#Frame_Header_link) and [body](#Frame_Body_link) are constructed as defined considering the following rules:
 
-:information_source: Note that the [RGB data](#RGB_Data_link) always comes in a pair of 3 bytes, one for the R, G and B channel, meaning that the resulting raw [RGB data's](#RGB_Data_link) length always has to be a multiple of 3.
-
-The Master Device then checks if a special command like a protocol command such as "disconnect" or a custom Subcommand should be executed on
-the Slave device. If so, it sets the command byte of the header to the value of the wanted command as stated in the frame header specification [TODO: link to frame header spec]
-If no command should be executed, it sets the value of the command byte to "None" (0).
-
-
-It then builds the Frame body by appending each R, G and B value, each represented as one byte value, of each LED for which data should be
-sent, starting the first led up to the n'th. LED where n can be any number up to the number of LEDs connected to the Slave device, which
-can be found inside the configuration which was communicated on the connection process.
-Note: This means, you can change all LEDs in one Frame, but don't have to. All unchanged LEDs will stay the state they were in before the frame arrived
-if not overridden by a protocol command or subcommand.
+- All rules stated for applying the frame body when [receiving a frame](#Receiving_Frames_link)
 
 The built frame gets appended at the end of the header and sent to the slave device.
 
 
-The master device now waits for a frame acknowledgement byte, indicating that the slave device is ready to receive the next frame and the
-slave device did not disconnect, or a frame error byte indicating that the slave device did not disconnect, but could not apply the Frame.
+The master device then waits for a [frame acknowledgement](#Frame_Acknowledgement_Byte_link) or [frame error](#Frame_Error_Byte_link)
 
-If there is no frame acknowledgement byte or frame error byte received within a specified time interval (eg. 10 seconds), the Master device assumes that
-the Slave device disconnected and may notify the user about the timeout. This is the main way to detect if the slave device disconnected during the data transmission.
+If a [frame acknowledgement](#Frame_Acknowledgement_Byte_link) or [frame error](#Frame_Error_Byte_link) is received, the next frame can be sent.
 
-Note that the timeout interval may vary on the implementation or a user set value as it may be necessary to use a longer or shorter
-interval depending on the use case and the hardware used.
+While a [frame acknowledgement](#Frame_Acknowledgement_Byte_link) indicates a successful operation, a [frame error](#Frame_Error_Byte_link) indicates an issue with the frame. This can be:
+
+- For `None` and `Clear` commands:
+    - The body size is no multiple of 3
+- For any other commands, see command definition.
 
 
-If a frame acknowledgement was received, the master device continues at the beginning of the data transmission process and is allowed to send the next frame.
-
-When receiving a frame error, the master device should warn the user about this critical problem e.g. by throwing an exception. All three cases where a frame error
-gets sent should not be possible to reach by the end user. Therefore, such a frame error represents most likely an issue with the implementation itself. By sending a frame error,
-the slave device also signals the master device that it discarded the faulty frame body and is ready to receive the next frame.
-
-When no Frame acknowledgement was received within a certain timeout, the Master Device assumes that the Slave Device disconnected and kills the connection on his side
-without sending a "disconnect" command to the slave device.
+If no [frame acknowledgement](#Frame_Acknowledgement_Byte_link) or [frame error](#Frame_Error_Byte_link) is received within a specified time interval, the connection is considered dead and can be terminated.
 
 
 [Fig. 2_data_en] (Overview of the Data transmission process for the master device)
 
 
-
+----------------------------------------------------------------------------------------------
 
 ### <a name="Disconnecting_link"></a> Disconnecting:
 
-The disconnection process can only be initiated by the master device. When the slave device wants to disconnect, it can simply
-stop responding with frame acknowledgements to time out on the master device, or kill the underlying connection if possible. This way of
-disconnecting indirectly is used for the ease of implementation.
 
-Master Device:
+##### Master Device:
 
-When the master device wants to disconnect, it sends an empty frame with a [`disconnect command`](#Protocol_Commands_link) to the Slave Device and then disconnects
+When the master device wants to disconnect, it sends a frame with a [`disconnect command`](#Protocol_Commands_link) to the Slave Device and then disconnects
 his side of the connection by invalidating all connection relevant values and disconnecting all underlying protocols.
 
 
-Slave Device:
+##### Slave Device:
 
-Upon receiving a frame with a [`disconnect command`](#Protocol_Commands_link) inside the frame header, the slave device treats the connection as dead, invalidates all connection relevant values, and disconnects the underlying connection on his side if needed. It then continues by waiting for new incoming connections.
+Upon receiving a frame with a [`disconnect command`](#Protocol_Commands_link) inside the frame header, the slave device treats the connection as dead, invalidates all connection relevant values, and disconnects the underlying connection on his side if needed. A final [frame acknowledgement](#Frame_Acknowledgement_Byte_link) is sent to confirm the disconnect.
 
-:information_source: Note that there may be no Frame acknowledgement sent or received for the disconnection frame.
-
+When the slave device wants to initiate disconnecting, it can only do so indirectly by
+stopping to respond to frames with frame acknowledgements or frame errors. This causes a time out on the master device.
 
 
 [Fig. 1_disconnect_en] (Overview of the disconnection process)
 
+-----------------------------------------------------------------
 
 ## <a name="Definitions_link"></a>Definitions
 
 This section contains definitions and constants of the protocol
-
-
-
-### <a name="General_Definitions_link"></a>General Definitions:
 
 #### <a name="RGB_Data_link"></a> RGB data:
 One or multiple sets of 3 bytes representing the R, G and B value for a LED each within a range of 0-255
@@ -660,11 +643,12 @@ Byte: 8
 
   __Commands:__
     - <a name="Protocol_Commands_link"></a>
+
       __Protocol commands:__
       Decimal value | Name | Description
       :---: | --- | ---
-      0 | "None" | Command indicating that no Command should be executed
-      1 | "Clear" | Command setting all LED values to 0 before applying the [frame body](#Frame_Body_link). This means, that, if the [frame body](#Frame_Body_link) is empty, all LEDs get set to black, and if the body contains [RGB data](#RGB_Data_link), all unchanged LEDs get set to black.
+      0 | "None" | This is the default command. Command stating that the [frame body](#Frame_Body_link) should be applied to the LEDs. Unset LEDs will remain unchanged.
+      1 | "Clear" | Command setting all LED values to 0 before applying the [frame body](#Frame_Body_link). If the [frame body](#Frame_Body_link) is empty, all LEDs get set to black, if the body contains [RGB data](#RGB_Data_link), all unset LEDs get set to black.
       2 | "Disconnect" |  Command telling the slave device to [disconnect](#Disconnecting_link)
       3 - 7 | [RESERVED] | Protocol command values reserved for future use.
 
@@ -703,25 +687,3 @@ execute small scripts on the slave device whenever a Frame gets received by it.
 Those Subprograms have a ID ranging from 0 - 247 (internally represented as 8 - 255, for details see the [Frame Header](#Frame_Header_link) Documentation)
 whereas each ID represents a function which can be executed by setting the corresponding ID in the [Command byte](#Command_Byte_link) of the [Frame Header](#Frame_Header_link).
 By default, each of those functions is empty (doing nothing when executed).
-
-#### Creating custom Subprograms:
-You can create your own subprograms by following the documentation for the code of the used slave device.
-Note that some of the IDs may already be occupied by the implementation itself. There is also no guaranty for when the subprogram gets executed
-(before, during or after applying the Frame Body to the LEDs) and if it runs linearly or in parallel. All of those factors depend on the implementation
-of the Slave Device and are therefore found in the documentation of its code.
-
-:warning: When writing custom Subprograms, please note that, depending on the implementation, those Subprograms may not be executed parallel and therefore
-may have a significant impact on performance and frame rates of the LEDs.
-
-
-
-
-## <a name="Future_Ideas_link"></a>Future Ideas
-- explicit Normal (non-addressable) led Support
-- RGBW support
-
-TODOs until release:
-change name
-create wiki
-add Disclaimer
-add licensing
