@@ -87,7 +87,7 @@ This section gives a list of the most important terms used within this protocol 
 
  __Term__ | Example | Description
  -----|---------|-------------
- __RGB data__ | `R:255, B:123, G:0` | One or multiple triplets of 8bit color values, represented in the RGB format. For more, see [RGB Data](#RGB_Data_link)
+ __RGB data__ | `R:255, B:123, G:0` | One or multiple triplets of 8bit color values, represented in the RGB format. For more, see [Color Data](#Color_Data_link)
  __Master Device__ | PC, Smartphone | The device which __sends__ RGB data to the slave device
  __Slave Device__ | Arduino, ESP8266 | The device which __receives__ the RGB data from the master device and applies it to the LEDs.
  __(Physical) Connection__ | USB, Wi-Fi  | The connection between the __master device__ and the __slave device__ (Includes the entire protocol stack for data transmission).
@@ -124,7 +124,7 @@ If this happened successfully, the master device sends data frames for the LEDs 
 
 ### <a name="Connecting_link"></a>Connecting
 
-Before sending any [RGB data](#RGB_Data_link), both devices need to be connected and configured. This connection process consists of 3 Steps:
+Before sending any [Color data](#Color_Data_link), both devices need to be connected and configured. This connection process consists of 3 Steps:
 - [Requesting a connection](#Requesting_A_Connection_link)
 - [Exchanging configuration data](#Exchanging_The_Configuration_link)
 - [Confirming the configuration data](#Confirming_The_Configuration_link)
@@ -268,7 +268,7 @@ The slave device checks this for the frame body size value from the header.
 
 If it's not a multiple of 3, the slave device sends a [`frame error byte`](#Frame_Error_Byte_link) to the master device and deletes the received frame body.
 
-If the Frame data is less than or equal to the `number of LEDs * 3`, the Slave device applies the [RGB data](#RGB_Data_link) to the LEDs and sends a
+If the Frame data is less than or equal to the `number of LEDs * 3`, the Slave device applies the [Color data](#Color_Data_link) to the LEDs and sends a
 Frame Acknowledgement Byte to the master device to indicate for one, that the data was applied and
 it is ready to receive the next Frame, and also indicating that the device was not disconnected.
 
@@ -287,7 +287,7 @@ gets received.
 
 If the frame body size and frame body offset checks passed, the slave device applies the frame body to the LEDs with the following rules:
 
-  - All LEDs are set to the color as specified in the body in the [RGB format](#RGB_Data_link) if the command is `None` or `Clear` or any other command unless stated otherwise.
+  - All LEDs are set to the color as specified in the body in the [RGB format](#Color_Data_link) if the command is `None` or `Clear` or any other command unless stated otherwise.
 
   - If there is no color specified for an LED, it shall remain unchanged when the command is `None`. When the command is `Clear`, all non-specified LEDs are set to black (R = 0, G = 0, B = 0).
 
@@ -357,38 +357,11 @@ stopping to respond to frames with frame acknowledgements or frame errors. This 
 
 This section contains definitions and constants of the protocol
 
-#### <a name="RGB_Data_link"></a> RGB data:
-One or multiple sets of 3 bytes representing the R, G and B value for a LED each within a range of 0-255
-
-Byte nr. | Color
-:---:|:---:
-0 | Red
-1 | Green
-2 | Blue
-
-//TODO: add byte indexes to the image and delete table
-
-<img src="./media/general/en/rgb_values.svg" alt="An RGB triple" height=25%>
-
-
-#### Subcommand:
-A command with an ID corresponding to a Subprogram sent inside of a Frame Header to execute the Subprogram.
-For more information, see [Subprograms](#Subprograms_link).
-
-####Subprogram:
-A small Program which gets executed on the Slave device when a Subcommand with its ID gets received
-For more information, see [Subprograms](#Subprograms_link).
-
-
-
-### <a name="Data_Transmission_Definitions_link"></a>Definitions for data transmission:
+### <a name="Data_Types_link"></a>Data Types:
 All mentions of the data types within this documentation refer to the definitions below if not stated otherwise.
 
-:information_source: Note: Those definitions do not apply for the use of an implementation of the protocol, they only do for
+:information_source: Note: Those definitions may not apply for the use of an implementation of the protocol, they only do for
 sending and receiving data using the protocol (describing in which format data is sent and received).
-Therefore they are only relevant if you are writing an implementation of the protocol.
-
-
 
 
 #### String:
@@ -397,8 +370,6 @@ String data has a dynamic length; The end of a string is marked with a Null byte
 Therefore: When sending String data, send a Null byte (`0x00`) afterwards if it is not done by the used programming language itself.
 
 <img src="./media/general/en/string.svg" alt="A string as defined above" height=25%>
-
-:warning: Note: Large Strings can have a significant impact on performance
 
 
 #### Integer:
@@ -418,13 +389,14 @@ A short is a 16bit 2s-compliment number.
 <img src="./media/general/en/short.svg" alt="A short as defined above" height=25%>
 
 #### Byte:
-A byte is a 8bit unsigned number ranging from 0 to 255.
+A byte is an 8bit unsigned number ranging from 0 to 255.
 
 <img src="./media/general/en/byte.svg" alt="A byte as defined above" height=25%>
 
+---
 
-:information_source: This is important because:
-- while most architectures do use this definition, depending on the board, the architecture of the Arduino may use 16-bit numbers as integer.
+:information_source: Notes:
+- while most architectures do use those definitions, depending on the board, the architecture of the Arduino may use 16-bit numbers as integer.
 Therefore, when you want to send integer data, you may actually have to use variables of the type long (32bit-integer) on the Arduino
 and int (32bit-integer) on the master system. At the end, the actual bit length of the types has to match.
 
@@ -581,83 +553,110 @@ Extra Values
 A frame or "data frame" consists of 2 parts:
 The frame header and the frame body.
 
-[Fig. 1_docs_frame_en] (Frame structure)
+__Frame:__
+```
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|            Header             |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               |
+/                               /
+/             Body              /
+|                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+```
 
 Those parts are structured as stated below:
 
 ### <a name="Frame_Header_link"></a>Frame Header:
-The frame header consists of 9 bytes:
+The frame header consists of 10 bytes:
 
-[Fig. 2_docs_frame_en] (Frame header structure)
+__Frame Header:__
+```
+0                   1 1 1 1 1 1
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               |
++        Frame Body Size        +
+|                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               |
++       Frame Body Offset       +
+|                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|    COMMAND    |     Unused    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+```
+__Content descriptions:__
 
 <a name="Frame_Body_Size_link"></a>
-Byte: 0-3
+__Byte: 0-3__
   - Name: Frame body size
   - Type: Integer
   - Description: The size of the upcoming frame body in bytes
   - Valid values:
-    - A positive Number or 0; Has to be a multiple of 3 as the data of the upcoming body is [RGB data](#RGB_Data_link).
-      It therefore also has to be <= [`number of LEDs * 3`](#Number_Of_Leds_link) (as specified in the exchanged [configuration](#Configuration_Values_link)).
+    - A positive Number; Has to be a multiple of 3 as the data of the upcoming body is [Color data](#Color_Data_link).
+    - 0 when there is no body
 
-    - 0 when there is no body (e.g. when the [command](#Command_Byte_link) is [`disconnect`](#Protocol_Commands_link)).
-
-    :warning: Causes a frame error byte to be sent if invalid.
+:warning: Causes a frame error byte to be sent if invalid.
 
 <a name="Frame_Body_Offset_link"></a>
-Byte 4-7
+__Byte: 4-7__
   - Name: Frame body offset
   - Type: Integer
   - Description: The offset of the first LED for the data inside the frame body used when applying the frame
-  - Valid values: A positive number or 0; Has to be < [`number of LEDs`](#Number_Of_Leds_link).
+  - Valid values: A positive number or 0
 
-    :warning: The frame body offset + frame body length /3 should never exceed the [number of LEDs](#Number_Of_Leds_link).
-
-    :warning: Causes a frame error byte to be sent if invalid.
+:warning: Causes a frame error byte to be sent if invalid.
 
 <a name="Command_Byte_link"></a>
-Byte: 8
+__Byte: 8__
   - Name: Command
   - Type: Byte
-  - Description: A byte value specifying a command to be executed before the upcoming [RGB data](#RGB_Data_link) gets applied. They are split into 2 different categories: Protocol commands and Subcommands.
+  - Description: A byte value specifying a command to be executed before the upcoming [Color data](#Color_Data_link) gets applied. They are split into 2 different categories: Protocol commands and Subcommands.
     - Protocol commands are commands defined by the protocol to fulfill special tasks.
     - Subcommands are commands that execute small, user defined programs on the slave device.
-  To implement your own subprograms and more, see [Subprograms](#Subprograms_link)
+  To implement your own subprograms and more, see [Subprograms](#Subprograms_link).
 
   Valid values: Any byte value (0-255)
 
-  __Commands:__
-    - <a name="Protocol_Commands_link"></a>
 
-      __Protocol commands:__
-      Decimal value | Name | Description
-      :---: | --- | ---
-      0 | "None" | This is the default command. Command stating that the [frame body](#Frame_Body_link) should be applied to the LEDs. Unset LEDs will remain unchanged.
-      1 | "Clear" | Command setting all LED values to 0 before applying the [frame body](#Frame_Body_link). If the [frame body](#Frame_Body_link) is empty, all LEDs get set to black, if the body contains [RGB data](#RGB_Data_link), all unset LEDs get set to black.
-      2 | "Disconnect" |  Command telling the slave device to [disconnect](#Disconnecting_link)
-      3 - 7 | [RESERVED] | Protocol command values reserved for future use.
+__Byte: 9__
+  - Currently unused, reserved for future use.
 
-    - <a name="Subcommands_link"></a>
-      __Subcommands:__
-      Decimal value | Name | Description
-      :---: | --- | ---
-      8 - 255 | - | Commands executing the [subprogram](#Subprograms_link) with the corresponding ID on the slave device. The ID is the corresponding value subtracted by an offset of 8. Therefore, a value of 8 executes the subprogram with the ID 0, a Value of 9 executes the subprogram with the ID 1, etc. For adding your own subprograms, see [Subprograms](#Subprograms_link).
+### <a name="Color_Data_link"></a>Color data:
 
-
+      One or multiple sets of 3 bytes representing the Red, Green and Blue color value each within a range of 0-255 in binary representation.
+      ```
+       0                   1 1 1 1 1 1 1 1 1 1 2 2 2 2
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |       R       |       G       |       B       |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      ```
 
 
 ### <a name="Frame_Body_link"></a>Frame Body:
-The frame body consists of the amount of bytes specified in the [`Frame Body size`](#Frame_Body_Size_link) each representing one R, G or B value of one LED,
-starting at the LED with the index 0 up to the LED with an index of (Frame Body size / 3).
-
-[Fig. 3_docs_frame_en] (Frame body structure)
-
-The size of the Body always has to be the Size specified in the Header, otherwise the Data will desynchronize and unexpected behavior will occur
-causing the protocol to stop functioning. It therefore has to comply to all specifications stated in the documentation of the [`Frame Body size`](#Frame_Body_Size_link), which state, that the number of bytes always have to be a multiple of 3 and are not allowed to
-exceed the [`number of LEDs * 3`](#Number_Of_Leds_link) communicated within the [Connection Process](#Connecting_link). If this is not the case,
-a [`Frame Error Byte`](#Frame_Error_Byte_link) will be sent instead of the [`Frame Acknowledgement Byte`](#Frame_Acknowledgement_Byte_link) to
-the master device when the frame gets received. For more, see [Data Transmission](#Data_Transmission_link).
+The frame body consists multiple [color data](#Color_Data_link) fields. Its size in bytes is specified in the [`Frame Body size`](#Frame_Body_Size_link) header value.
 
 
+__Frame Body Structure:__
+```
+ 0                   1 1 1 1 1 1 1 1 1 1 2 2 2 2
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|       R       |       G       |       B       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+/                                               /
+/                     ...                       /
+/                                               /
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|       R       |       G       |       B       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+----------------------------------------------------------------------
 
 ## <a name="Subprograms_link"></a>Subprograms
 This sections explains subprograms and subcommands.
@@ -671,3 +670,31 @@ execute small scripts on the slave device whenever a Frame gets received by it.
 Those Subprograms have a ID ranging from 0 - 247 (internally represented as 8 - 255, for details see the [Frame Header](#Frame_Header_link) Documentation)
 whereas each ID represents a function which can be executed by setting the corresponding ID in the [Command byte](#Command_Byte_link) of the [Frame Header](#Frame_Header_link).
 By default, each of those functions is empty (doing nothing when executed).
+
+
+
+#### Subcommand:
+A command with an ID corresponding to a Subprogram sent inside of a Frame Header to execute the Subprogram.
+For more information, see [Subprograms](#Subprograms_link).
+
+####Subprogram:
+A small Program which gets executed on the Slave device when a Subcommand with its ID gets received
+For more information, see [Subprograms](#Subprograms_link).
+
+
+__Commands:__
+  - <a name="Protocol_Commands_link"></a>
+
+    __Protocol commands:__
+    Decimal value | Name | Description
+    :---: | --- | ---
+    0 | "None" | This is the default command. Command stating that the [frame body](#Frame_Body_link) should be applied to the LEDs. Unset LEDs will remain unchanged.
+    1 | "Clear" | Command setting all LED values to 0 before applying the [frame body](#Frame_Body_link). If the [frame body](#Frame_Body_link) is empty, all LEDs get set to black, if the body contains [Color data](#Color_Data_link), the color data gets applied and all unset LEDs get set to black.
+    2 | "Disconnect" |  Command telling the slave device to [disconnect](#Disconnecting_link)
+    3 - 7 | [RESERVED] | Protocol command values reserved for future use.
+
+  - <a name="Subcommands_link"></a>
+    __Subcommands:__
+    Decimal value | Name | Description
+    :---: | --- | ---
+    8 - 255 | - | Commands executing the [subprogram](#Subprograms_link) with the corresponding ID on the slave device. The ID is the corresponding value subtracted by an offset of 8. Therefore, a value of 8 executes the subprogram with the ID 0, a Value of 9 executes the subprogram with the ID 1, etc. For adding your own subprograms, see [Subprograms](#Subprograms_link).
