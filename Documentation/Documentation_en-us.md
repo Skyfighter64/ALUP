@@ -32,11 +32,22 @@ If you just want to use it, see:
 [ALUP Implementations](#Implementations_link) and [Projects using ALUP](#Projects_link).
 
 ## Table of contents
-- TODO:
-- add
-- me
+- [Overview](#Overview_link)
+- [Features](#Features_link)
+- [Requirements](#Requirements_link)
+- [Terminology](#Terminology_link)
+- [Protocol Flow](#Protocol_Flow_link)
+  - [Connecting](#Connecting_link)
+  - [Data Transmission](#Data_Transmission_link)
+  - [Disconnecting](#Disconnecting_link)
+- [Definitions](#Definitions_link)
+  - [Data Types](#Data_Types_link)
+  - [Constants](#Constants_link)
+  - [Configuration Format](#Configuration_Format_link)
+  - [Frame Format](#Frame_Format_link)
+  - [Commands](#Commands_link)
 
-## Overview
+## <a name="Overview_link"></a> Overview
 
 <img src="./media/general/en/Protocol Overview.svg" alt="An integer as defined above" height=800px>
 
@@ -86,7 +97,7 @@ This section gives a list of the most important terms used within this protocol 
 
  __Term__ | Example | Description
  -----|---------|-------------
- __RGB data__ | `R:255, B:123, G:0` | One or multiple triplets of 8bit color values, represented in the RGB format. For more, see [Color Data](#Color_Data_link)
+ __Color data__ | `R:255, B:123, G:0` | One or multiple triplets of 8bit color values, represented in the RGB format. For more, see [Color Data](#Color_Data_link)
  __Master Device__ | PC, Smartphone | The device which __sends__ RGB data to the slave device
  __Slave Device__ | Arduino, ESP8266 | The device which __receives__ the RGB data from the master device and applies it to the LEDs.
  __(Physical) Connection__ | USB, Wi-Fi  | The connection between the __master device__ and the __slave device__ (Includes the entire protocol stack for data transmission).
@@ -95,12 +106,11 @@ This section gives a list of the most important terms used within this protocol 
  __Frame Header__ | - | The part of the frame containing special information. For more, see [Frame](#Frame_link).
  __Frame Body__ | - | The part of the frame which contains RGB data. For more, see [Frame](#Frame_link).
   |  |
- __Command__ | - | A command within the frame header. Can be either a __protocol command__ or a __subcommand__.
- __Subcommand__ | - | A __command__ which tells the __slave device__ to execute a custom predefined __subprogram__. See [Subprograms](#Subprograms_link).
- __Protocol Command__ | - | A special type of __command__ which tells the __slave device__ to execute a protocol-defined task. For more, see [Protocol Commands](#Protocol_Commands_link).
- __Subprogram__ | - | Custom, Predefined code which gets executed when a specific __subcommand__ gets received. Each subprogram has its own __subcommand__. For more, see [Subprograms](#Subprograms_link).
+ __Command__ | - | A field in the frame header. See [Commands](#Commands_link)
 
-## Protocol Workflow
+------------------------------
+
+## Protocol Flow
 This section states how the protocol works in detail by explaining what each device does during each
 of the 3 processes. Those processes are:
 
@@ -520,7 +530,7 @@ __Extra Values:__
 --------------------------------------------------------------------------------
 
 
-### <a name="Frame_link"></a>Frame:
+### <a name="Frame_Format_link"></a>Frame:
 A frame consists of 2 parts:\
 The frame header and the frame body.
 
@@ -585,10 +595,8 @@ __Frame Body Offset__
 __Command__
   - Type: Byte
   - Size: 1 Byte
-  - Description: A byte value specifying a command to be executed before the upcoming [Color data](#Color_Data_link) gets applied. They are split into 2 different categories: Protocol commands and Subcommands.
-    - Protocol commands are commands defined by the protocol to fulfill special tasks.
-    - Subcommands are commands that execute small, user defined programs on the slave device.
-  To implement your own subprograms and more, see [Subprograms](#Subprograms_link).
+  - Description: A byte value specifying a command to be executed before the upcoming [Color data](#Color_Data_link) gets applied or how to interpret the frame body.
+  For more, see [commands](#Commands_link).
   - Valid values: Any byte value (0-255)
 
 
@@ -628,43 +636,30 @@ __Frame Body Structure:__
 
 ----------------------------------------------------------------------
 
-## <a name="Subprograms_link"></a>Subprograms
-This sections explains subprograms and subcommands.
+## <a name="Commands_link"></a>Commands
+This sections explains the use of the `Command` header value.
 
-The protocols supports little subprograms that can be executed whenever a Frame is received by sending a [Subcommand](#Subcommands_link)
-with the ID of a Subprogram.
+Commands specify an action to execute for the slave device. This could be an information on how to interpret the contents of the frame body or an execution of predefined code on the slave device.
 
-Their goal is to provide a possibility to the end user, a program using the protocol or a protocol implementation itself to
-execute small scripts on the slave device whenever a Frame gets received by it.
+As example, the `CLEAR` command specifies that the frame body should be applied to the LED strip but, contrary to the default behavior, all LEDs not set to a color in the body will be set to black.
 
-Those Subprograms have a ID ranging from 0 - 247 (internally represented as 8 - 255, for details see the [Frame Header](#Frame_Header_link) Documentation)
-whereas each ID represents a function which can be executed by setting the corresponding ID in the [Command byte](#Command_Byte_link) of the [Frame Header](#Frame_Header_link).
-By default, each of those functions is empty (doing nothing when executed).
+For another example, the `DISCONNECT` command specifies that the code for disconnecting should be executed. The Frame Body is ignored.
+
+This creates extensibility to a point where everyone can specify custom commands fitting for their projects needs.
 
 
+List of Commands:
 
-#### Subcommand:
-A command with an ID corresponding to a Subprogram sent inside of a Frame Header to execute the Subprogram.
-For more information, see [Subprograms](#Subprograms_link).
+Name   | Value | Description
+:---- | ----- | -----------
+None | 0  | The default command. Command stating that the [frame body](#Frame_Body_link) should be applied to the LEDs. LEDs not changed by the frame body will remain unchanged.
+Clear | 1 | Command setting all LED values to 0 before applying the [frame body](#Frame_Body_link). If the [frame body](#Frame_Body_link) is empty, all LEDs get set to black, if the body contains [Color data](#Color_Data_link), the color data gets applied and all LEDs not changed by the frame body get set to black.
+Disconnect | 2 |  Command invoking the [disconnecting](#Disconnecting_link) process.
+RESERVED |3 - 7|  Commands reserved for future use.
+User Defined | 8 - 255 | Command values with no official use. Intended to be used by anyone to define custom commands.
 
-####Subprogram:
-A small Program which gets executed on the Slave device when a Subcommand with its ID gets received
-For more information, see [Subprograms](#Subprograms_link).
 
-
-__Commands:__
-  - <a name="Protocol_Commands_link"></a>
-
-    __Protocol commands:__
-    Decimal value | Name | Description
-    :---: | --- | ---
-    0 | "None" | This is the default command. Command stating that the [frame body](#Frame_Body_link) should be applied to the LEDs. Unset LEDs will remain unchanged.
-    1 | "Clear" | Command setting all LED values to 0 before applying the [frame body](#Frame_Body_link). If the [frame body](#Frame_Body_link) is empty, all LEDs get set to black, if the body contains [Color data](#Color_Data_link), the color data gets applied and all unset LEDs get set to black.
-    2 | "Disconnect" |  Command telling the slave device to [disconnect](#Disconnecting_link)
-    3 - 7 | [RESERVED] | Protocol command values reserved for future use.
-
-  - <a name="Subcommands_link"></a>
-    __Subcommands:__
-    Decimal value | Name | Description
-    :---: | --- | ---
-    8 - 255 | - | Commands executing the [subprogram](#Subprograms_link) with the corresponding ID on the slave device. The ID is the corresponding value subtracted by an offset of 8. Therefore, a value of 8 executes the subprogram with the ID 0, a Value of 9 executes the subprogram with the ID 1, etc. For adding your own subprograms, see [Subprograms](#Subprograms_link).
+Some Ideas for custom commands (may be implemented in the future idk):
+- Command for 'White' Color frames for RGBW LED strips
+- Commands triggering predefined animations
+- Command setting static colors
