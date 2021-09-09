@@ -17,7 +17,7 @@
 
 # ALUP - Arduino LED USB Protocol (name may change)
 
-__Version: 0.1 (internal)__
+__Version: 0.2__
 
 
 
@@ -485,6 +485,7 @@ __Protocol Version:__
   - Description: the protocol version used by the slave device
   - Valid values:
       - `"0.1 (internal)"`
+      - `"0.2"`
 
 <a name="Device_Name_link"></a>
 __Device Name:__
