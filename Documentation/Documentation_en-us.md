@@ -14,7 +14,6 @@
 
 
 --------------------------------------------------------------------------------
-en-us
 
 # ALUP - Arduino LED USB Protocol (name may change)
 
@@ -360,19 +359,16 @@ This section contains definitions and constants of the protocol
 ### <a name="Data_Types_link"></a>Data Types:
 All mentions of the data types within this documentation refer to the definitions below if not stated otherwise.
 
-:information_source: Note: Those definitions may not apply for the use of an implementation of the protocol, they only do for
-sending and receiving data using the protocol (describing in which format data is sent and received).
-
-
-#### String:
+#### <a name="String_link"></a>String:
 A string is a combination of UTF-8 encoded characters followed by a null byte used as terminator.
-String data has a dynamic length; The end of a string is marked with a Null byte (0x00) as a terminator.
-Therefore: When sending String data, send a Null byte (`0x00`) afterwards if it is not done by the used programming language itself.
+String data has a dynamic length; The end of a string is marked with a Null byte (`0x00`) as a terminator.
+
+When sending String data, send a Null byte (`0x00`) afterwards if it is not done by the used programming language itself.
 
 <img src="./media/general/en/string.svg" alt="A string as defined above" height=25%>
 
 
-#### Integer:
+#### <a name="Integer_link"></a>Integer:
 An integer number is a 32-bit 2s-compliment number.
 
 <img src="./media/general/en/integer.svg" alt="An integer as defined above" height=25%>
@@ -388,7 +384,7 @@ A short is a 16bit 2s-compliment number.
 
 <img src="./media/general/en/short.svg" alt="A short as defined above" height=25%>
 
-#### Byte:
+#### <a name="Byte_link"></a>Byte:
 A byte is an 8bit unsigned number ranging from 0 to 255.
 
 <img src="./media/general/en/byte.svg" alt="A byte as defined above" height=25%>
@@ -407,142 +403,117 @@ important to ensure a null terminator is also sent so the receiving device does 
 
 
 ### <a name="Constants_link"></a>Constants:
-This section describes constants that are relevant for this protocol
+This section describes all relevant constants
 
-Version:
-Value: One of:
-        "version 0.1 (internal)"
-
- Description: A String value containing the protocol version.
-
-
-
-<a name="Connection_Request_Byte_link"></a>__Connection Request Byte:__
-Value: 255 (base 10)
-Description: Byte value indicating a connection request.
-For usage see: [Connecting](#Connecting_link)
-
-
-<a name="Connection_Acknowledgement_Byte_link"></a>__Connection Acknowledgement Byte:__
-Value: 254 (base 10)
-Description: Byte value for acknowledging a connection request
-For usage see: [Connecting](#Connecting_link)
-
-
-<a name="Configuration_Start_Byte_link"></a>__Configuration Start Byte:__
-Value: 253 (base 10)
-Description: Byte value indicating the start of the Configuration
-For usage see: [Connecting](#Connecting_link)
-
-
-<a name="Configuration_Acknowledgement_Byte_link"></a>__Configuration Acknowledgement Byte:__
-Value: 252 (base 10)
-Description: Byte value indicating that the Configuration was received and applied successfully
-For usage see: [Connecting](#Connecting_link)
-
-
-<a name="Configuration_Error_Byte_link"></a>Configuration Error Byte:
-Value: 251 (base 10)
-Description: Byte value indicating that the Configuration was not received and applied successfully
-  and the connection attempt will be stopped
-Causes:
-    - Invalid configuration received by the slave device
-For usage see: [Connecting](#Connecting_link)
-
-
-<a name="Frame_Acknowledgement_Byte_link"></a>Frame Acknowledgement Byte:
-Value: 250 (base 10)
-Description: Byte value indicating that a Frame was received and applied successfully
-For usage see:
-  - [Data Transmission](#Data_Transmission_link)
-  - [Frame Header](#Frame_Header_link)
-  - [Frame Body](#Frame_Body_link)
-
-
-<a name="Frame_Error_Byte_link"></a>Frame Error Byte:
-Value: 249 (base 10)
-Description: Byte value indicating that a Frame could not be received and applied successfully.
-Causes:
-  - Invalid [`frame body size`](#Frame_Body_Size_link) received by the slave device
-  - Invalid [`frame body offset`](#Frame_Body_Offset_link) received by the slave device
-
-  :information_source: Additional causes are listed in the documentation of each implementation
-
-For usage see:
-  - [Data Transmission](#Data_Transmission_link)
-  - [Frame Header](#Frame_Header_link)
-  - [Frame Body](#Frame_Body_link)
-
+Name | Value | Description
+:--- | --- | ---
+<a name="Connection_Request_Byte_link"></a>__Connection Request Byte__ | 255 (base 10) |  Byte value used by the slave device to request a new connection.
+<a name="Connection_Acknowledgement_Byte_link"></a>__Connection Acknowledgement Byte__ | 254 (base 10) | Byte value used by the master device to accept a connection request.
+<a name="Configuration_Start_Byte_link"></a>__Configuration Start Byte:__ | 253 (base 10) | Byte value indicating the start of the configuration
+<a name="Configuration_Acknowledgement_Byte_link"></a>__Configuration Acknowledgement Byte__ | 252 (base 10) | Byte value sent by the master device to indicate that the configuration was applied and received successfully
+<a name="Configuration_Error_Byte_link"></a>__Configuration Error Byte__ | 251 (base 10) | Byte value indicating that the that the master device could not receive or apply the configuration correctly
+<a name="Frame_Acknowledgement_Byte_link"></a>__Frame Acknowledgement Byte__ | 250 (base 10) | Byte value sent by the slave device to indicate that a Frame was received and applied successfully
+<a name="Frame_Error_Byte_link"></a>__Frame Error Byte__ | 249 (base 10) |Byte value indicating that a Frame could not be received or applied successfully.<br/> Caused by: <ul> <li>Invalid [`frame body size`](#Frame_Body_Size_link)</li><li>Invalid [`frame body offset`](#Frame_Body_Offset_link)</li></ul>
 
 --------------------------------------------------------------------------------
 
 ### <a name="#Configuration_Format_link"></a>Configuration Format:
-This section describes the format of the configuration which gets exchanged between the devices when connecting.
-
+This section describes the format of the configuration used while connecting.
 
 The configuration has to be in the following format:
+```
+ 0                   1 1 1 1 1 1
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+
+|   253 (CSB)   |               
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+/                               /
+/        Protocol Version       /
+/                               /
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+/                               /
+/          Device Name          /
+/                               /
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               |
++           LED Count           +
+|                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               |
++           Data Pin            +
+|                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               |
++           Clock Pin           +
+|                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+/                               /
+/          Extra Values         /
+/                               /
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
 
-Configuration Start Byte (1 byte)
-Protocol Version (String, dynamic size)
-device name (String, dynamic size)
-number of LEDs connected (integer, 32bit);
-data pin (integer, 32bit);
-clock pin (integer, 32bit);
-Extra values (String, dynamic size)
-
-[Fig. 1_docs_configuration_en] (The configuration format for the ALUP v. 0.1)
 
 
-
-<a name="Configuration_Start_Byte_link"></a>Configuration Start Byte
-  Description: The configuration start byte marks the start of the configuration when sent over any kind of connection.
-               It is always followed by the configuration values according to the protocol configuration format.
-               For more details see: [Configuration Start Byte](#Configuration_Start_Byte_link)
 
 
 
 #### <a name="Configuration_Values_link"></a>Configuration Values:
 
+<a name="Configuration_Start_Byte_link"></a>
+__Configuration Start Byte (CSB):__
+  - Type: [Byte](#Byte_link)
+    - Constant Value: 253 (base 10)
+  - Size: 1 Byte
+  - Description: A byte marking the start of the configuration. It is followed by the configuration values according to the protocol configuration format.
+
+
 <a name="Protocol_Version_link"></a>
-Protocol Version
-  Type: String (UTF-8)
-  Description: the protocol version used by the slave device
-  Valid values:
-    One of:
-      "0.1 (internal)"
+__Protocol Version:__
+  - Type: [String](#String_link (UTF-8)
+  - Size: Dynamic
+  - Description: the protocol version used by the slave device
+  - Valid values:
+      - `"0.1 (internal)"`
 
 <a name="Device_Name_link"></a>
-Device name
-  Type: String (UTF-8)
-  Description: A descriptive name of the slave device; Does not have to be unique
-  Valid values: Any String value
+__Device Name:__
+  - Type: [String](#String_link) (UTF-8)
+  - Size: Dynamic
+  - Description: A descriptive name of the slave device; Does not have to be unique
+  - Valid values: Any [String](#String_link) value
 
 <a name="Number_Of_Leds_link"></a>
-Number of LEDs connected
-  Type: Integer
-  Description: The number of LEDs on the connected addressable LED strip
-  Valid values: A positive Integer value > 0
+__LED Count:__
+  - Type: [Integer](#Integer_link)
+  - Size: 4 Bytes
+  - Description: The number of LEDs on the addressable LED strip connected to the slave device
+  - Valid values: Any positive Integer value or 0
 
 <a name="Data_Pin_link"></a>
-Data pin
-  Type: Integer
-  Description: The digital pin at which the data line of the addressable LED strip is connected
-  Valid values: A positive Integer value; Should be a valid Data pin of the connected slave device (e.g. Arduino)
+__Data pin:__
+  - Type: [Integer](#Integer_link)
+  - Size: 4 Bytes
+  - Description: The digital pin at which the data line of the addressable LED strip is connected
+  - Valid values:
+    - A positive Integer value; Should be a valid Data pin of the connected slave device (e.g. Arduino)
+    - `0` if not applicable  
 
 <a name="Clock_pin_link"></a>
-Clock pin
-  Type: Integer
-  Description: The digital pin at which the clock line of the addressable LED strip is connected.
-    If the connected LED strip does not need a clock signal, this value can be ignored and set to 0
-  Valid values: A positive Integer value; Should be a valid Data pin of the connected slave device (e.g. Arduino) or 0 if no clock
-    signal is needed by the type of connected LED strip
+__Clock pin:__
+  - Type: [Integer](#Integer_link)
+  - Size: 4 Bytes
+  - Description: The digital pin at which the clock line of the addressable LED strip is connected.
+  - Valid values:
+    - A positive Integer value; Should be a valid Data pin of the connected slave device (e.g. Arduino)
+    - `0` if not applicable
 
 <a name="Extra_Values_link"></a>
-Extra Values
-    Type: String (UTF-8)
-    Description: A string containing any kind of values; This can be used by any developer to send additional configuration values, but may
-    be ignored by the Protocol implementation itself and just passed on to the implementing program or the user itself.
-    Valid values: Any String value
+__Extra Values:__
+  - Type: [String](#String_link) (UTF-8)
+  - Size: Dynamic
+  - Description: A string containing user-customizable configuration values; This can be used by anyone to send additional configuration values, but may be ignored depending on the implementation.
+  - Valid values: Any [String](#String_link) value
 
 
 
@@ -550,7 +521,7 @@ Extra Values
 
 
 ### <a name="Frame_link"></a>Frame:
-A frame or "data frame" consists of 2 parts:
+A frame consists of 2 parts:\
 The frame header and the frame body.
 
 __Frame:__
@@ -591,35 +562,34 @@ __Frame Header:__
 __Content descriptions:__
 
 <a name="Frame_Body_Size_link"></a>
-__Byte: 0-3__
-  - Name: Frame body size
-  - Type: Integer
+__Frame Body Size__
+  - Type: [Integer](#Integer_link)
+  - Size: 4 Bytes
   - Description: The size of the upcoming frame body in bytes
   - Valid values:
-    - A positive Number; Has to be a multiple of 3 as the data of the upcoming body is [Color data](#Color_Data_link).
+    - A positive Number; Has to be a multiple of 3
     - 0 when there is no body
 
-:warning: Causes a frame error byte to be sent if invalid.
+:warning: Causes a frame error to be sent if invalid.
 
 <a name="Frame_Body_Offset_link"></a>
-__Byte: 4-7__
-  - Name: Frame body offset
-  - Type: Integer
-  - Description: The offset of the first LED for the data inside the frame body used when applying the frame
+__Frame Body Offset__
+  - Type: [Integer](#Integer_link)
+  - Size: 4 Bytes
+  - Description: The offset of the data from the first LED
   - Valid values: A positive number or 0
 
-:warning: Causes a frame error byte to be sent if invalid.
+:warning: Causes a frame error to be sent if invalid.
 
 <a name="Command_Byte_link"></a>
-__Byte: 8__
-  - Name: Command
+__Command__
   - Type: Byte
+  - Size: 1 Byte
   - Description: A byte value specifying a command to be executed before the upcoming [Color data](#Color_Data_link) gets applied. They are split into 2 different categories: Protocol commands and Subcommands.
     - Protocol commands are commands defined by the protocol to fulfill special tasks.
     - Subcommands are commands that execute small, user defined programs on the slave device.
   To implement your own subprograms and more, see [Subprograms](#Subprograms_link).
-
-  Valid values: Any byte value (0-255)
+  - Valid values: Any byte value (0-255)
 
 
 __Byte: 9__
@@ -627,14 +597,14 @@ __Byte: 9__
 
 ### <a name="Color_Data_link"></a>Color data:
 
-      One or multiple sets of 3 bytes representing the Red, Green and Blue color value each within a range of 0-255 in binary representation.
-      ```
-       0                   1 1 1 1 1 1 1 1 1 1 2 2 2 2
-       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |       R       |       G       |       B       |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      ```
+One or multiple sets of 3 bytes representing the Red, Green and Blue color value each within a range of 0-255 in binary representation.
+```
+0                   1 1 1 1 1 1 1 1 1 1 2 2 2 2
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|       R       |       G       |       B       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
 
 
 ### <a name="Frame_Body_link"></a>Frame Body:
