@@ -87,9 +87,10 @@ The **protocol** has the following hardware requirements:
     - e.g. USB, UART, Wi-Fi, Bluetooth etc.
 
 #### Connection Requirements:
-There are no strict requirements for the connection type used.
-
-The ALUP has built in congestion control, but no checks for package loss. Therefore, any used connection has to be reliable.
+The ALUP has built in congestion control, but nothing else. Therefore, it has the following requirements for the connection:
+- in-order packet transmission
+- lossless transmission
+  - Depending on the implementation, there may also be lossy transmission, as long as only full [frames](#Frame_link) are lost, to decrease latency
 
 
 ## Terminology
