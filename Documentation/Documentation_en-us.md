@@ -129,7 +129,7 @@ If this happened successfully, the master device sends data frames for the LEDs 
 
 
 
-:information_source: General Note: all timeout values (unless stated explicitly) are defined by the protocol implementation itself. If implementing this protocol, it is advised to use a timeout of multiple seconds for the best results.
+:information_source: All timeout values are defined by the protocol implementation itself.
 
 
 ### <a name="Connecting_link"></a>Connecting
@@ -149,7 +149,7 @@ Before sending any [Color data](#Color_Data_link), both devices need to be conne
 ##### Slave Device:
 As soon as the physical connection is established,
 the slave device begins to send a [connection request byte](#Connection_Request_Byte_link) and listens for a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) in fixed intervals.
-The interval size can be specified by the implementation itself (recommended: 0.1s).
+The interval size can be specified by the implementation itself.
 
 Sending [connection request bytes](#Connection_Request_Byte_link) and listening for a
 [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) will not time out and continue indefinitely until a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) is received.
