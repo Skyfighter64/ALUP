@@ -43,7 +43,7 @@ If you want to control LEDs as just described, you can use an implementation of 
 
 
 
-## <a name="Installing_link"></a>Installing
+## <a name="setup_link"></a>Setup
 
 This section will give an overview about how to set up devices running the ALUP v. 0.1.
 
