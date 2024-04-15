@@ -7,7 +7,7 @@ The ALUP (Arduino LED USB Protocol, name may change) is a Protocol which handles
 It's goal is to make it possible for almost any device to control an LED strip, even if this device has no digital Pins like an
 Arduino or Raspberry Pi, by using a device with such digital pins as a proxy (middle-man).
 
-[Fig. 1_en] (two devices connected to each other over a wired connection along with connected leds to the slave device) (TODO: add img)
+[Fig. 1_en] (two devices connected to each other over a wired connection along with connected leds to the Receiver) (TODO: add img)
 
 The original use was to control individually addressable LEDs like ws2812b with
 any kind of computer over a USB connection using an Arduino as a proxy.
@@ -29,10 +29,10 @@ If you want to control LEDs as just described, you can use an implementation of 
 
 ### Properties:
 - Its use is to transmit RGB data
-- It is master-slave based which means one of the two connected devices takes the role of the master (aka the data sender)
-    and the other one the role of the slave (the data receiver)
+- It is Sender-Receiver based which means one of the two connected devices takes the role of the Sender
+    and the other one the role of the Receiver
 
-- Data frames are only sent from a master device to the slave device (unidirectional)
+- Data frames are only sent from a Sender device to the Receiver (unidirectional)
 
 
 ### Limitations:
@@ -48,18 +48,18 @@ If you want to control LEDs as just described, you can use an implementation of 
 This section will give an overview about how to set up devices running the ALUP v. 0.1.
 
 
-Step 1: Select an implementation for the master device (See [Implementations](#Implementations_link)) fitting best for your use case and connection type.
+Step 1: Select an implementation for the Sender (See [Implementations](#Implementations_link)) fitting best for your use case and connection type.
         The listed Implementations differ in things like compatible Hardware, Operating System, etc.
 
-Step 2: Install the implementation for the master device according to it's documentation. This implementation may have to be configured when using it or executing a program
+Step 2: Install the implementation for the Sender according to it's documentation. This implementation may have to be configured when using it or executing a program
         using it, or before installation. To configure it, see its documentation.
 
 
-Step 3: Select an implementation for the slave device (See [Implementations](#Implementations_link)) fitting best for your slave device and connection type.
-        Those listed Implementations also may differ in things like compatible Hardware, Operating System, etc., but are generally compatible with all master device
+Step 3: Select an implementation for the Receiver (See [Implementations](#Implementations_link)) fitting best for your Microcontroller and connection type.
+        Those listed Implementations also may differ in things like compatible Hardware, Operating System, etc., but are generally compatible with all Sender
         implementations which use the same connection type unless stated differently in the documentation of one of the implementations.
 
-Step 4: Configure the implementation of the slave device according to it's documentation. Most of the time, this has to be done before installing it onto the device itself, as the slave device
+Step 4: Configure the implementation of the Receiver according to it's documentation. Most of the time, this has to be done before installing it onto the device itself, as the Receiver
         probably won't interface with you directly after this point. For more information and how to configure it, see its documentation.
 
 Step 5: Connect the devices over the previously chosen connection type (e.g. Wi-Fi, USB, ...).
@@ -73,10 +73,10 @@ The devices are now ready to use. For additional help, see [Troubleshooting], [F
 
 
 ## <a name="Implementations_link"></a>Implementations
-### Master Device:
+### Sender:
 - [Java-ALUP](https://github.com/Skyfighter64/Java-ALUP "Java Implementation of the ALUP")
 
-### Slave Device:
+### Receiver:
 - [Arduino-ALUP](https://github.com/Skyfighter64/Arduino-ALUP "Arduino Implementation of the ALUP")
 - [ESP8266-Wifi-ALUP](https://github.com/Skyfighter64/ESP8266-WiFi-ALUP "ESP8266 Implementation of the ALUP")
 
