@@ -2,3 +2,4 @@
 
 #ignore folder wit local files
 local/
+.$*
