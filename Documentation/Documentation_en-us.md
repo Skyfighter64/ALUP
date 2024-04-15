@@ -140,7 +140,7 @@ Before sending any [Color data](#Color_Data_link), both devices need to be conne
 - [Confirming the configuration data](#Confirming_The_Configuration_link)
 
 
-[Fig. 2_en] (Overview of the connection process)
+<img src="./media/general/en/Connection Diagram.svg" alt="Overview of the connection establishing procedure" height=800px>
 
 ----
 
@@ -246,7 +246,7 @@ The data transmission process has 3 steps:
 - Frame Acknowledgement
 
 
-[Fig. 1_data_en] (Overview of the Data transmission process)
+<img src="./media/general/en/Data transmission diagram.svg" alt="Overview over the data transmission procedure" height=800px>
 
 
 #### <a name="Receiving_Frames_link"></a>Receiving Frames
