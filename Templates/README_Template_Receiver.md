@@ -16,10 +16,10 @@ Copyright 2020 Skyfighter64
 
 --------------------------------------------------------------------------
 
-This file is an example README file for master device implementations of the ALUP.
+This file is an example README file for Receiver implementations of the ALUP.
 You can add/remove anything you'd like.
 
-For an example, see [Java-ALUP](https://github.com/Skyfighter64/Java-ALUP/blob/master/README.md)
+For an example, see [Arduino-ALUP](https://github.com/Skyfighter64/Arduino-ALUP/blob/master/README.md)
 
 --------------------------
 
@@ -50,60 +50,67 @@ This README includes the following points:
   * [List of compatible connection types]
 
 
-### Supported Operating Systems
-
-
-OS | Confirmed working | Comments
---------------- |:-----------------:| --------------------
-[OS name]      | [yes/no]] |  [special instructions, comments]
-
-
 ### Supported Devices:
 
+
 Device | Confirmed working | Comments
---------------- |:-----------------:| --------------------
+--------------- | ----------------- | --------------------
 [device name]      | [yes/no]] |  [special instructions, comments]
 
 
-### Supported LEDs
 
- * (optional) [List of supported LED chipsets]
+### Supported LED strips
+
+ * [List of supported LED chipsets]
 
 
 ### Protocol specific
 
 #### Timeouts
 
-
 Description| timeout in ms
 --- | ---
-Waiting for Connection Request | [timeout value]
-Waiting for Configuration Start | [timeout value]
-Waiting for Configuration Acknowledgement | [timeout value]
-Waiting for Frame Acknowledgement | [timeout value]
-Waiting for Frame Error | [timeout value]
-Additional timeouts | [timeout value]
+Requesting connection | [timeout value]
+Waiting for configuration acknowledgement | [timeout value]
+Waiting for configuration error | [timeout value]
+[additional timeouts] | [timeout value]
 
+
+#### Causes of Frame Errors
+
+ * [list of all causes for a frame error]
 
 ## Requirements
-### Software:
-* Java 9 or higher
+Software:
+* [List of software requirements needed for installation and execution]
 
-### Hardware:
-* USB Port, USB cable
+
+Hardware:
+* [List of hardware requirements needed for installation and execution]
+
+:warning: You may need additional components like an external power supply depending on your used hardware.
 
 
 ## Installation
 
 
-1. Download the latest library version from [here]
-2. Include the downloaded library in your project
+### DISCLAIMER
+
+[add installation disclaimer, disclaimer for working with external psu's, etc. here if needed]
+
+
+1. [How ]
+2. [to]
+3. [Install]
 
 ## Configuration
 
+
+
+
 ### Configuration values:
 
-[A list of the configuration values specific to this implementation and a guide on how to change them]
+[A list of all configurable values and how to change them]
 
 
 Name | Default value | Valid values | Description
@@ -119,38 +126,35 @@ Name | Default value | Valid values | Description
 <br/>
 
 
-
 ### Subprograms
 
+#### Specifications
+
+* Subprogram execution: [ When and how subprograms are executed]
+* [Additional specifications if needed]
 
 
 #### Implementation specific subprograms
 
-A list of subprograms which need to be added to the slave device for this implementation to fully work:
+A list of subprograms which are already implemented.
 
-* [Subprogram which needs to be added, and how to add]
+Function | ID | Description
+--- | --- | ---
+`ExampleSubProgram()` | [Subprogram ID] | [Description of the subprogram]
 
 
 #### Adding your own subprograms
 
-If you want to add your own subprograms, please follow the guide of your used slave device.
+The following guide will show you how to add your own subprograms to this sketch. If you want to learn more about subprograms and subcommands, visit the [ALUP Documentation] (...)
 
-[Add special steps if needed]
+1. [Guide on how to]
+2. [add subprograms yourself]
+3. [and execute them]
 
-#### Calling your own subprograms
-
-* [Guide on how to execute subprograms]
-
-* [Additional information]
 
 ## Usage
 
-[How to use]
-[How to create your first program]
-[link to the API documentation]
-
-### Examples:
-[Simple examples, or link to examples]
+[How to use the program after installation]
 
 
 ## Contributing
@@ -160,9 +164,8 @@ If you want to contribute to this project, please see CONTRIBUTING.md
 
 ## Credits
 
-[Credit libraries used, special people, etc. here if you want]
-
+[Credit anyone you'd like]
 
 ## License
 
-This project is licensed under [add license here]. For more information, see LICENSE (TODO: add link)
+This project is licensed under [add license here]. For more information, see LICENSE
