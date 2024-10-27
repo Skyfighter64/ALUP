@@ -7,9 +7,7 @@ The ALUP (Arduino LED USB Protocol, name may change) is a Protocol which handles
 It's goal is to make it possible for almost any device to control an LED strip, even if this device has no digital Pins like an
 Arduino or Raspberry Pi, by using a device with such digital pins as a proxy (middle-man).
 
-
-![Fig. 1_en]("./Documentation/media/general/en/Protocol Overview.svg" two devices connected to each other over a wired connection along with connected leds to the Receiver) (TODO: add img)
-
+<img src="Documentation/media/general/en/Protocol Overview.svg" alt="General Protocol Overview" height=800px>
 The original use was to control individually addressable LEDs like ws2812b with
 any kind of computer over a USB connection using an Arduino as a proxy.
 
