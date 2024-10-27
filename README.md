@@ -7,24 +7,25 @@ The ALUP (Arduino LED USB Protocol, name may change) is a Protocol which handles
 It's goal is to make it possible for almost any device to control an LED strip, even if this device has no digital Pins like an
 Arduino or Raspberry Pi, by using a device with such digital pins as a proxy (middle-man).
 
-[Fig. 1_en] (two devices connected to each other over a wired connection along with connected leds to the Receiver) (TODO: add img)
+
+![Fig. 1_en]("./Documentation/media/general/en/Protocol Overview.svg" two devices connected to each other over a wired connection along with connected leds to the Receiver) (TODO: add img)
 
 The original use was to control individually addressable LEDs like ws2812b with
 any kind of computer over a USB connection using an Arduino as a proxy.
 
-If you want to control LEDs as just described, you can use an implementation of this protocol in your project. For more, see [Implementations] [TODO: add link]
+If you want to control LEDs as just described, you can use an implementation of this protocol in your project. For more, see [Implementations](#Implementations_link)
 
 
 ## Features and Limitations
 ### Features:
 - It's connection based, meaning it first establishes a connection between two devices using some
-    initial parameters (as described in [Detailed documentation] (TODO: add link)) and then sends RGB Data continuously
+    initial parameters (as described in the detailed documentation) and then sends RGB Data continuously
 
 - It's a transport layer protocol, therefore independent of the type of physical connection.
-    For the requirements it has for the physical connection and underlying protocols, see [Requirements](TODO: add link)
+    For the requirements it has for the physical connection and underlying protocols, see [Requirements]((https://github.com/Skyfighter64/ALUP/blob/master/Documentation/Documentation_en-us.md#requirements)
 
-- Support for custom configuration values (See: [Configuration format](TODO: add link))
-- Support for subprograms (See: [Subprograms](TODO: add link))
+- Support for custom configuration values (See: [Configuration format](https://github.com/Skyfighter64/ALUP/blob/master/Documentation/Documentation_en-us.md#commands))
+- Support for subprograms (See: [Commands](https://github.com/Skyfighter64/ALUP/blob/master/Documentation/Documentation_en-us.md#commands))
 
 
 ### Properties:
