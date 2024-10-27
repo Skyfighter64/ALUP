@@ -53,14 +53,11 @@ If you just want to use it, see:
 
 #### Example Usecase:
 You want to control addressable LED strips using your computer, but can't because it has no way to connect to the LEDs directly, like GPIO pins, whereas an arduino
-can control adressable LEDs, but lacks features or performance which are needed.
+can control addressable LEDs, but lacks features or performance which are needed.
 
 This is where this protocol comes in.
 
 The ALUP describes a way how the RGB data gets from the PC (Sender) to the Microcontroller (Receiver) over any kind of connection like USB or Wi-Fi, which then applies the RGB values to the LEDs. This makes it possible for the PC to control the addressable LEDs indirectly.    
-
-[Fig. 1_en] (two devices connected to each other over a wired connection along with connected LEDs to the Receiver)
-
 
 
 
@@ -154,7 +151,6 @@ The interval size can be specified by the implementation itself.
 Sending [connection request bytes](#Connection_Request_Byte_link) and listening for a
 [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) will not time out and continue indefinitely until a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) is received.
 
-[Fig. 2_1_en] (Receiver sending a connection request to the Sender and waiting for connection acknowledgement)
 
 
 ##### Sender:
@@ -164,7 +160,6 @@ receive the configuration.
 
 Listening for a connection request byte [connection request byte](#Connection_Request_Byte_link) may time out, but can also continue until one was received. This behavior can be specified by the implementation of the Sender.
 
-[Fig. 3_en] (Sender sending a connection acknowledgement byte to the Receiver)
 
 
 ----
@@ -176,7 +171,6 @@ When receiving the [connection acknowledgement](#Connection_Acknowledgement_Byte
 It sends the configuration in the defined [Configuration Format](#Configuration_Format_link) and waits for either a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link) or a  [configuration error byte](#Configuration_Error_Byte_link).
 
 
-[Fig. 4_en] (Receiver sending configuration to Sender )
 
 ##### Sender:
 After sending the connection acknowledgement, the Sender starts listening for the  [configuration start byte](#Configuration_Start_Byte_link).\
@@ -198,8 +192,6 @@ a problem while applying the configuration. Reasons for sending a [configuration
 - configuration contains invalid values
 - an error occurred while applying the configuration
 
-
-[Fig. 5_en] (Sender applying configuration and sending configuration acknowledgement, Receiver waiting for configuration acknowledgement )
 
 
 
@@ -225,10 +217,6 @@ After sending a [configuration acknowledgement byte](#Configuration_Acknowledgem
 
 When the Sender receives a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link), the connection is established successfully and the
 devices are ready to move on to [Data Transmission](#Data_Transmission_link).
-
-
-[Fig. 2_en] (Overview of the connection process)
-
 
 
 
@@ -308,8 +296,6 @@ If the frame body size and frame body offset checks passed, the Receiver applies
 
 
 
-[Fig. 2_data_en] (Overview of the Data transmission process for the Receiver)
-
 -------------------------------
 
 #### <a name="Sending_Frames_link"></a>Sending Frames
@@ -337,7 +323,6 @@ While a [frame acknowledgement](#Frame_Acknowledgement_Byte_link) indicates a su
 If no [frame acknowledgement](#Frame_Acknowledgement_Byte_link) or [frame error](#Frame_Error_Byte_link) is received within a specified time interval, the connection is considered dead and can be terminated.
 
 
-[Fig. 2_data_en] (Overview of the Data transmission process for the Sender)
 
 
 ----------------------------------------------------------------------------------------------
@@ -359,7 +344,6 @@ When the Receiver wants to initiate disconnecting, it can only do so indirectly 
 stopping to respond to frames with frame acknowledgements or frame errors. This causes a time out on the Sender.
 
 
-[Fig. 1_disconnect_en] (Overview of the disconnection process)
 
 -----------------------------------------------------------------
 
