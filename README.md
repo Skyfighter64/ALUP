@@ -19,8 +19,8 @@ If you want to control LEDs as just described, you can use an implementation of 
 - It's connection based, meaning it first establishes a connection between two devices using some
     initial parameters (as described in the detailed documentation) and then sends RGB Data continuously
 
-- It's a transport layer protocol, therefore independent of the type of physical connection.
-    For the requirements it has for the physical connection and underlying protocols, see [Requirements]((https://github.com/Skyfighter64/ALUP/blob/master/Documentation/Documentation_en-us.md#requirements)
+- It's an application layer protocol, therefore independent of the type of physical connection.
+    For the requirements it has for the physical connection and underlying protocols, see [Requirements](https://github.com/Skyfighter64/ALUP/blob/master/Documentation/Documentation_en-us.md#requirements)
 
 - Support for custom configuration values (See: [Configuration format](https://github.com/Skyfighter64/ALUP/blob/master/Documentation/Documentation_en-us.md#commands))
 - Support for subprograms (See: [Commands](https://github.com/Skyfighter64/ALUP/blob/master/Documentation/Documentation_en-us.md#commands))
