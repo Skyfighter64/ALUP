@@ -17,13 +17,13 @@
 
 # ALUP - Arduino LED USB Protocol (name may change)
 
-__Version: 0.2__
+__Version: 0.3__
 
 
 
 ## Description
 
-The ALUP (Arduino LED USB Protocol, name may change) is a protocol for transmission of RGB data.
+The ALUP (Arduino LED USB Protocol, temporary name) is a protocol for transmission of RGB data.
 It can be used to let almost any device control addressable LED strips.
 
 
@@ -53,21 +53,20 @@ If you just want to use it, see:
 
 #### Example Usecase:
 You want to control addressable LED strips using your computer, but can't because it has no way to connect to the LEDs directly, like GPIO pins, whereas an arduino
-can control adressable LEDs, but lacks features or performance which are needed.
+can control addressable LEDs, but lacks features or performance which are needed.
 
 This is where this protocol comes in.
 
 The ALUP describes a way how the RGB data gets from the PC (Sender) to the Microcontroller (Receiver) over any kind of connection like USB or Wi-Fi, which then applies the RGB values to the LEDs. This makes it possible for the PC to control the addressable LEDs indirectly.    
 
-[Fig. 1_en] (two devices connected to each other over a wired connection along with connected LEDs to the Receiver)
-
-
 
 
 ## Features
-- __Flexible:__ Almost any connection such as USB or Wi-Fi can be used.
+- __Connection-Independent:__ Almost any connection such as Serial (USB) or TCP (via Wi-Fi/Ethernet) can be used.
 
-- __Customizable:__ Programs can add custom configuration values and trigger pre-written scripts on the Receiver.
+- __Customizable:__ Programs can add custom configuration values and trigger pre-defined commands on the Receiver.
+
+- __Realtime:__ Designed to work as fast as possible with features like time stamps, time synchronization and frame buffering
 
 ## Requirements
 A list of requirements for the protocol.
@@ -76,21 +75,22 @@ A list of requirements for the protocol.
 #### Hardware requirements:
 The **protocol** has the following hardware requirements:
 
-- Sender
+- A Sender
     - e.g. a Windows PC
 
-- Receiver
+- A Receiver
     - Has to be able to control addressable LEDs
-    - e.g. Arduino, ESP32, ...
+    - e.g. Arduino, ESP32, Raspberry Pi, ...
 
-- Connection between devices
+- Connection between Sender and Receiver
     - e.g. USB, UART, Wi-Fi, Bluetooth etc.
 
 #### Connection Requirements:
 The ALUP has built in congestion control, but nothing else. Therefore, it has the following requirements for the connection:
 - in-order packet transmission
 - lossless transmission
-  - Depending on the implementation, there may also be lossy transmission, as long as only full [frames](#Frame_link) are lost, to decrease latency
+
+In practice, lossy protocols such as UDP might also work, but can introduce unawnted side effects when packets are dropped.
 
 
 ## Terminology
@@ -98,46 +98,33 @@ This section gives a list of the most important terms used within this protocol 
 
  __Term__ | Example | Description
  -----|---------|-------------
- __Color data__ | `R:255, B:123, G:0` | One or multiple triplets of 8bit color values, represented in the RGB format. For more, see [Color Data](#Color_Data_link)
- __Sender (formerly Master Device)__ | PC, Smartphone | The device which __sends__ RGB data to the Receiver
- __Receiving Device (formerly Slave Device)__ | Arduino, ESP8266 | The device which __receives__ the RGB data from the Sender and applies it to the LEDs.
+ __Color data__ | `R:255, G:123, B:0`| One or multiple triplets of 8bit RGB color values. For more, see [Color Data](#Color_Data_link)
+ __Sender__ | PC, Smartphone, ... | The device which generates and __sends__ RGB data to the Receiver
+ __Receiver__ | Arduino, ESP8266, ... | The device which __receives__ the RGB data from the Sender and applies it to the LEDs.
  __(Physical) Connection__ | USB, Wi-Fi  | The connection between the __Sender__ and the __Receiver__ (Includes the entire protocol stack for data transmission).
   |  |
- __Frame__ | - | A set of data which gets sent from the Sender to the Receiver. Consists of a __frame header__  and a __frame body__. For more, see [Frame](#Frame_link).
- __Frame Header__ | - | The part of the frame containing special information. For more, see [Frame](#Frame_link).
- __Frame Body__ | - | The part of the frame which contains RGB data. For more, see [Frame](#Frame_link).
+ __Frame__ | - | A set of data which is sent from the Sender to the Receiver during the data transmission phase. Consists of a __frame header__  and a __frame body__. For more, see [Frame](#Frame_link).
+ __Frame Header__ | - | The Part of a frame containing signaling information. For more, see [Frame](#Frame_link).
+ __Frame Body__ | - | The part of a frame containing RGB data. For more, see [Frame](#Frame_link).
   |  |
- __Command__ | - | A field in the frame header. See [Commands](#Commands_link)
+ __Command__ | - | A special field in the frame header. See [Commands](#Commands_link)
 
 ------------------------------
 
 ## Protocol Flow
-This section states how the protocol works in detail by explaining what each device does during each
-of the 3 processes. Those processes are:
 
-- [Connecting](#Connecting_link)
-- [Data Transmission](#Data_Transmission_link)
-- [Disconnecting](#Disconnecting_link)
-
-
-### Protocol Flow Overview:
-A quick overview of the protocol workflow.
-When two devices get connected via the physical connection, they first establish a connection and share some important
-configuration data like how many LEDs are connected to the Receiver.
-
-If this happened successfully, the Sender sends data frames for the LEDs until it disconnects, or the physical connection is interrupted.
-
-
-
-:information_source: All timeout values are defined by the protocol implementation itself.
+The protocol communication flow consist of three abstract phases:
+1. [**Connecting**](#Connecting_link): A Sender and Receiver first establish a connection and share configuration data.
+2. [**Data Transmission**](#Data_Transmission_link): The Sender sends data frames to the receiver and waits for an acknowledgement.
+3. [**Disconnecting**](#Disconnecting_link): The Sender signals to the Receiver that the connection should be terminated.
 
 
 ### <a name="Connecting_link"></a>Connecting
 
-Before sending any [Color data](#Color_Data_link), both devices need to be connected and configured. This connection process consists of 3 Steps:
-- [Requesting a connection](#Requesting_A_Connection_link)
-- [Exchanging configuration data](#Exchanging_The_Configuration_link)
-- [Confirming the configuration data](#Confirming_The_Configuration_link)
+Establishing a connection between a Sender and Receiver includes the following steps:
+1. [Requesting a connection](#Requesting_A_Connection_link): The Receiver repeatedly sends connection requests. The Sender answers with a connection acknowledgement.
+2. [Exchanging configuration data](#Exchanging_The_Configuration_link): The Receiver sends its configuration.
+3. [Confirming the configuration data](#Confirming_The_Configuration_link): The Sender answers either with a configuration acknowledgement or configuration error.
 
 
 <img src="./media/general/en/Connection Diagram.svg" alt="Overview of the connection establishing procedure" height=800px>
@@ -147,88 +134,43 @@ Before sending any [Color data](#Color_Data_link), both devices need to be conne
 #### <a name="Requesting_A_Connection_link"></a>Requesting a connection:
 
 ##### Receiver:
-As soon as the physical connection is established,
-the Receiver begins to send a [connection request byte](#Connection_Request_Byte_link) and listens for a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) in fixed intervals.
-The interval size can be specified by the implementation itself.
-
-Sending [connection request bytes](#Connection_Request_Byte_link) and listening for a
-[connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) will not time out and continue indefinitely until a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) is received.
-
-[Fig. 2_1_en] (Receiver sending a connection request to the Sender and waiting for connection acknowledgement)
+To initiate an ALUP connection, the Receiver sends a [connection request byte](#Connection_Request_Byte_link) repeatedly and listens for a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) in fixed intervals.
+This process does not time out and continues indefinitely until a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) is received.
 
 
 ##### Sender:
-The Sender starts by listening for a single Byte of data containing a [connection request byte](#Connection_Request_Byte_link). When receiving a [connection request byte](#Connection_Request_Byte_link), the Sender prepares to receive the
-[Configuration](#Configuration_Format_link) next and sends a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) back to the Receiver as soon as it is ready to
-receive the configuration.
+The Sender listens for a [connection request byte](#Connection_Request_Byte_link). When receiving a [connection request byte](#Connection_Request_Byte_link), the Sender prepares to receive the
+[Configuration](#Configuration_Format_link) next and sends a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) as soon as it is ready to receive the configuration.
 
 Listening for a connection request byte [connection request byte](#Connection_Request_Byte_link) may time out, but can also continue until one was received. This behavior can be specified by the implementation of the Sender.
-
-[Fig. 3_en] (Sender sending a connection acknowledgement byte to the Receiver)
 
 
 ----
 #### <a name="Exchanging_The_Configuration_link"></a>Exchanging the configuration:
 
 ##### Receiver:
-When receiving the [connection acknowledgement](#Connection_Acknowledgement_Byte_link), the Receiver stops sending [connection request bytes](#Connection_Request_Byte_link) and listening for [connection acknowledgements](#Connection_Acknowledgement_Byte_link).
+As soon as the Receiver receives the [connection acknowledgement](#Connection_Acknowledgement_Byte_link), it stops sending [connection request bytes](#Connection_Request_Byte_link).
 
-It sends the configuration in the defined [Configuration Format](#Configuration_Format_link) and waits for either a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link) or a  [configuration error byte](#Configuration_Error_Byte_link).
+The Receiver builds and sends the configuration in the defined [Configuration Format](#Configuration_Format_link) and waits for either a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link) or a  [configuration error byte](#Configuration_Error_Byte_link).
 
 
-[Fig. 4_en] (Receiver sending configuration to Sender )
 
 ##### Sender:
-After sending the connection acknowledgement, the Sender starts listening for the  [configuration start byte](#Configuration_Start_Byte_link).\
+After sending the connection acknowledgement, the Sender starts listening for a [configuration start byte](#Configuration_Start_Byte_link).\
 This byte marks the start of the configuration.
 
-When receiving the start byte, the Sender proceeds by reading in the configuration as defined in the [Configuration Format](#Configuration_Format_link).
+When received, the Sender proceeds by reading in the configuration values as defined in the [Configuration Format](#Configuration_Format_link).
 
-If there was no configuration start byte received within a certain timeout, the Sender assumes that the
-connection is dead and aborts the connection process.
+If there was no configuration start byte received within a certain timeout, the Sender assumes that the connection is dead and aborts the connection process.
 
-When receiving the configuration, the Sender initializes everything necessary using the received configuration. As soon as the initialization
-is finished it sends an [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link), indicating that it applied the configuration successfully.
-
-If the configuration could not be applied, it sends an [configuration error byte](#Configuration_Error_Byte_link) to the Receiver indicating that there was
-a problem while applying the configuration. Reasons for sending a [configuration error byte](#Configuration_Error_Byte_link) are:
-
-- incompatible protocol versions
-- malformed configuration received
-- configuration contains invalid values
-- an error occurred while applying the configuration
-
-
-[Fig. 5_en] (Sender applying configuration and sending configuration acknowledgement, Receiver waiting for configuration acknowledgement )
-
+While receiving the configuration, as soon as the protocol version is received, the Sender compares it to a list of compatible protocol versions. If incompatible, the Sender sends a [configuration error byte](#Configuration_Error_Byte_link) and aborts the connection process.
 
 
 #### <a name="Confirming_The_Configuration_link"></a>Confirming the configuration:
-
-##### Receiver:
-If a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link) is received, the Receiver sends an configuration acknowledgement back indicating that
-it is ready to receive Data and moves on to [Data Transmission](#Data_Transmission_link).
-
-If the Sender could not apply the configuration, a [configuration error byte](#Configuration_Error_Byte_link) will be received.
-In this case, the Receiver aborts the "connection" process and
-waits for a new connection attempt by starting at the [beginning](#Requesting_A_Connection_link) and sending new connection requests.
-
-If no configuration acknowledgement byte or configuration error byte was received within a certain timeout, the Receiver assumes that the
-connection is dead and aborts the "connection" process. It then starts at the [beginning](#Requesting_A_Connection_link) by sending new connection requests.
-
-
-
-
 ##### Sender:
-After sending a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link) to confirm the configuration, the Sender listens for a configuration acknowledgement byte from the Receiver.
+After receiving the configuration successfully, the Sender applies and stores the configuration parameters. These parameters should be accessible by the user via the Senders API.
 
-
-When the Sender receives a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link), the connection is established successfully and the
-devices are ready to move on to [Data Transmission](#Data_Transmission_link).
-
-
-[Fig. 2_en] (Overview of the connection process)
-
+If the configuration was received and applied successfully, the Sender sends a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link).
 
 
 
@@ -237,7 +179,7 @@ devices are ready to move on to [Data Transmission](#Data_Transmission_link).
 
 
 ### <a name="Data_Transmission_link"></a>Data transmission:
-The following text and images will describe the process of sending and receiving [frames](#Frame_link) on both devices.
+The following will describe the process of sending and receiving [frames](#Frame_link) on both devices.
 
 The data transmission process has 3 steps:
 
