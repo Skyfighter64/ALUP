@@ -179,80 +179,63 @@ If the configuration was received and applied successfully, the Sender sends a [
 
 
 ### <a name="Data_Transmission_link"></a>Data transmission:
-The following will describe the process of sending and receiving [frames](#Frame_link) on both devices.
+In the data transmission phase, the Sender sends frames in unspecified intervals to the receiver. 
+The receiver buffers incoming frames and executes the frame's command when its time stamp was reached.
+After execution, the receiver answers the frame with either a Frame Acknowledgement or a Frame Error.  
 
-The data transmission process has 3 steps:
-
-- [Sending](#Sending_Frames_link)/[Receiving](#Receiving_Frames_link) a frame
-- Applying the frame to the LEDs
-- Frame Acknowledgement
+The following will describe this process in detail from the Sender's and Receiver's perspective.
 
 
+
+### Data Transmission on the Receiver
+
+The receiver executes the following steps:
+1. **Receive new Frame** if available and buffer is empty
+2. If buffer contains frames and oldest frame's time stamp was reached:
+   - **Apply Frame** Command
+   - **Remove frame** from tail of the buffer
+   - **Send Frame Answer** to Sender 
+  
+These steps are repeated until the protocol disconnects.
+
+
+ TODO: update image
 <img src="./media/general/en/Data transmission diagram.svg" alt="Overview over the data transmission procedure" height=800px>
 
 
-#### <a name="Receiving_Frames_link"></a>Receiving Frames
-##### Receiver:
-Receiving frames consists of 4 steps:
-- Receiving frame header
-- Receiving frame body
-- Validating frame body size
-- Acknowledging frame
+#### <a name="receiving-new-frames"></a>Receiving new Frames
+Receiving frames consists of the following steps:
+1. Receiving frame header
+   - The Receiver reads in the [frame header's fields](#Frame_Header_link) as defined in the header specification.
+   - Memory for the Body gets allocated based on the Frame Body Size header field. If not possible, the Receiver sends a `OUT_OF_MEMORY` Frame Error.
+2. Receiving frame body
+   - The Receiver reads in the [frame body](#frame-body) as defined in the specification.
+3. Add frame to the head of the buffer
 
 
-As soon as the Receiver sent its Configuration acknowledgement, it gets ready to receive frames in the [frame format](#Frame_link) by waiting for a [Frame Header](#Frame_Header_link).
+#### <a name="applying-a-frame"></a>Applying a Frame
 
-Waiting for a header continues indefinitely until a header is received or the underlying connection either disconnects or times out. This means that data transmission never times out on the side of the Receiver.
+The receiver checks the header's `command` field. Based on the command it executes different steps:
+- `NONE` `(0)`: Default Command. **Apply the frame body** colors to the LEDs.
+- `CLEAR` `(1)`: Set color of all LEDs to black. If present, **apply the frame body** colors to the LEDs afterwards.
+- `DISCONNECT` `(2)`: Acknowledge Frame and **Disconnect** protocol and connection.
+- Custom Commands: Custom commands can be implementation-specific. See [commands](#commands).
 
-When receiving the fixed-size header, the Receiver reads the frame body size from the header and receives the frame body using this size value.
+If an unknown command was received, return a `INVALID_COMMAND` frame error.
 
- It then checks the
-[Command Byte](#Command_Byte_link) of the header and executes the given command.
-
-In case of the default command `None`, the Receiver checks the body size and body offset to be valid.
-
-#### Checking the frame body size:
-
-The frame body consists of byte triplets which represent RGB values, it's length therefore always has to be a multiple of 3.
-
-The Receiver checks this for the frame body size value from the header.
-
-
-If it's not a multiple of 3, the Receiver sends a [`frame error byte`](#Frame_Error_Byte_link) to the Sender and deletes the received frame body.
-
-If the Frame data is less than or equal to the `number of LEDs * 3`, the Receiver applies the [Color data](#Color_Data_link) to the LEDs and sends a
-Frame Acknowledgement Byte to the Sender to indicate for one, that the data was applied and
-it is ready to receive the next Frame, and also indicating that the device was not disconnected.
-
-If the Frame data is more than the (number of LEDs * 3), the Receiver discards all of the data from this frame body and sends
-a Frame Error Byte to the Sender.
-
-This has to be done in order to prevent desynchronisation of the data stream, in which case all of the incoming data afterwards would be invalid
-and the connection would have to be shut down and reestablished manually.
-
-
-It now returns to the start of the Data Transmission to receive the next frame. This continues indefinitely until a `disconnect` protocol command
-gets received.
-
-
-#### Applying the frame body:
-
-If the frame body size and frame body offset checks passed, the Receiver applies the frame body to the LEDs with the following rules:
-
-  - All LEDs are set to the color as specified in the body in the [RGB format](#Color_Data_link) if the command is `None` or `Clear` or any other command unless stated otherwise.
-
-  - If there is no color specified for an LED, it shall remain unchanged when the command is `None`. When the command is `Clear`, all non-specified LEDs are set to black (R = 0, G = 0, B = 0).
-
-  - The first LED index is the value of [Frame Body Offset](#Frame_Body_Offset_link). If the first Index exceeds the length of the LED strip, continue without applying LEDs.
-
-  - The last LED index is `Frame Body Offset + (Frame Body Size / 3)`. If the Frame Body data exceeds the length of the LED strip, all exceeding values are ignored.
-
-
-
-
-[Fig. 2_data_en] (Overview of the Data transmission process for the Receiver)
+#### <a name="applying-the-frame-body"></a>Applying the Frame Body
+When applying the frame body:
+1. Check if the frame's `offset` field exceeds the LED count. If so, return an `INVALID_OFFSET` Frame error.
+2. Check if the frame body's size is a multiple of 3. If not, return a `INVALID_BODY_SIZE` frame error. 
+ the RGB color data from the frame body gets applied to the LEDs.
+3. Apply convert the frame body to color values and apply them to the LEDs.
 
 -------------------------------
+
+
+### Data Transmission on the Sender
+
+#TODO
 
 #### <a name="Sending_Frames_link"></a>Sending Frames
 ##### Sender:
