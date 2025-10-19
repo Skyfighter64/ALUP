@@ -27,27 +27,29 @@ The ALUP (Arduino LED USB Protocol, temporary name) is a protocol for transmissi
 It can be used to let almost any device control addressable LED strips.
 
 
-This document defines the protocol itself.
-If you just want to use it, see:
-[ALUP Implementations](#Implementations_link) and [Projects using ALUP](#Projects_link).
+This document defines the protocol parameters, constants, data and control flow.\
+For reference implementations see:
+
+- [Python-ALUP (Sender)](https://github.com/Skyfighter64/Python-ALUP)
+- [Arduino-ALUP (Receiver)](https://github.com/Skyfighter64/Arduino-ALUP)
 
 ## Table of contents
-- [Overview](#Overview_link)
-- [Features](#Features_link)
-- [Requirements](#Requirements_link)
-- [Terminology](#Terminology_link)
-- [Protocol Flow](#Protocol_Flow_link)
-  - [Connecting](#Connecting_link)
-  - [Data Transmission](#Data_Transmission_link)
-  - [Disconnecting](#Disconnecting_link)
-- [Definitions](#Definitions_link)
-  - [Data Types](#Data_Types_link)
-  - [Constants](#Constants_link)
-  - [Configuration Format](#Configuration_Format_link)
-  - [Frame Format](#Frame_Format_link)
-  - [Commands](#Commands_link)
+- [Overview](#overview)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Terminology](#terminology)
+- [Protocol Flow](#protocol-flow)
+  - [Connecting](#connecting)
+  - [Data Transmission](#data-transmission)
+  - [Disconnecting](#disconnecting)
+- [Definitions](#definitions)
+  - [Data Types](#data-types)
+  - [Constants](#constants)
+  - [Configuration Format](#configuration-format)
+  - [Frame Format](#frame)
+  - [Commands](#commands)
 
-## <a name="Overview_link"></a> Overview
+## <a name="overview"></a> Overview
 
 <img src="./media/general/en/Protocol Overview.svg" alt="General Protocol Overview" height=800px>
 
@@ -98,40 +100,40 @@ This section gives a list of the most important terms used within this protocol 
 
  __Term__ | Example | Description
  -----|---------|-------------
- __Color data__ | `R:255, G:123, B:0`| One or multiple triplets of 8bit RGB color values. For more, see [Color Data](#Color_Data_link)
+ __Color data__ | `R:255, G:123, B:0`| One or multiple triplets of 8bit RGB color values. For more, see [Color Data](#color-data)
  __Sender__ | PC, Smartphone, ... | The device which generates and __sends__ RGB data to the Receiver
  __Receiver__ | Arduino, ESP8266, ... | The device which __receives__ the RGB data from the Sender and applies it to the LEDs.
  __(Physical) Connection__ | USB, Wi-Fi  | The connection between the __Sender__ and the __Receiver__ (Includes the entire protocol stack for data transmission).
   |  |
- __Frame__ | - | A set of data which is sent from the Sender to the Receiver during the data transmission phase. Consists of a __frame header__  and a __frame body__. For more, see [Frame](#Frame_link).
- __Frame Header__ | - | The Part of a frame containing signaling information. For more, see [Frame](#Frame_link).
- __Frame Body__ | - | The part of a frame containing RGB data. For more, see [Frame](#Frame_link).
+ __Frame__ | - | A set of data which is sent from the Sender to the Receiver during the data transmission phase. Consists of a __frame header__  and a __frame body__. For more, see [Frame](#frame).
+ __Frame Header__ | - | The Part of a frame containing signaling information. For more, see [Frame](#frame).
+ __Frame Body__ | - | The part of a frame containing RGB data. For more, see [Frame](#frame).
   |  |
- __Command__ | - | A special field in the frame header. See [Commands](#Commands_link)
+ __Command__ | - | A special field in the frame header. See [Commands](#commands)
 
 ------------------------------
 
 ## Protocol Flow
 
 The protocol communication flow consist of three abstract phases:
-1. [**Connecting**](#Connecting_link): A Sender and Receiver first establish a connection and share configuration data.
-2. [**Data Transmission**](#Data_Transmission_link): The Sender sends data frames to the receiver and waits for an acknowledgement.
-3. [**Disconnecting**](#Disconnecting_link): The Sender signals to the Receiver that the connection should be terminated.
+1. [**Connecting**](#connecting): A Sender and Receiver first establish a connection and share configuration data.
+2. [**Data Transmission**](#data-transmission): The Sender sends data frames to the receiver and waits for an acknowledgement.
+3. [**Disconnecting**](#disconnecting): The Sender signals to the Receiver that the connection should be terminated.
 
 
-### <a name="Connecting_link"></a>Connecting
+### <a name="connecting"></a>Connecting
 
 Establishing a connection between a Sender and Receiver includes the following steps:
-1. [Requesting a connection](#Requesting_A_Connection_link): The Receiver repeatedly sends connection requests. The Sender answers with a connection acknowledgement.
-2. [Exchanging configuration data](#Exchanging_The_Configuration_link): The Receiver sends its configuration.
-3. [Confirming the configuration data](#Confirming_The_Configuration_link): The Sender answers either with a configuration acknowledgement or configuration error.
+1. [Requesting a connection](#requesting-a-connection): The Receiver repeatedly sends connection requests. The Sender answers with a connection acknowledgement.
+2. [Exchanging configuration data](#configuration-exchange): The Receiver sends its configuration.
+3. [Confirming the configuration data](#configuration-confirmation): The Sender answers either with a configuration acknowledgement or configuration error.
 
 
 <img src="./media/general/en/Connection Diagram.svg" alt="Overview of the connection establishing procedure" height=800px>
 
 ----
 
-#### <a name="Requesting_A_Connection_link"></a>Requesting a connection:
+#### <a name="requesting-a-connection"></a>Requesting a connection:
 
 ##### Receiver:
 To initiate an ALUP connection, the Receiver sends a [connection request byte](#Connection_Request_Byte_link) repeatedly and listens for a [connection acknowledgement byte](#Connection_Acknowledgement_Byte_link) in fixed intervals.
@@ -146,12 +148,12 @@ Listening for a connection request byte [connection request byte](#Connection_Re
 
 
 ----
-#### <a name="Exchanging_The_Configuration_link"></a>Exchanging the configuration:
+#### <a name="configuration-exchange"></a>Configuration Exchange:
 
 ##### Receiver:
 As soon as the Receiver receives the [connection acknowledgement](#Connection_Acknowledgement_Byte_link), it stops sending [connection request bytes](#Connection_Request_Byte_link).
 
-The Receiver builds and sends the configuration in the defined [Configuration Format](#Configuration_Format_link) and waits for either a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link) or a  [configuration error byte](#Configuration_Error_Byte_link).
+The Receiver builds and sends the configuration in the defined [Configuration Format](#configuration-format) and waits for either a [configuration acknowledgement byte](#Configuration_Acknowledgement_Byte_link) or a  [configuration error byte](#Configuration_Error_Byte_link).
 
 
 
@@ -159,14 +161,14 @@ The Receiver builds and sends the configuration in the defined [Configuration Fo
 After sending the connection acknowledgement, the Sender starts listening for a [configuration start byte](#Configuration_Start_Byte_link).\
 This byte marks the start of the configuration.
 
-When received, the Sender proceeds by reading in the configuration values as defined in the [Configuration Format](#Configuration_Format_link).
+When received, the Sender proceeds by reading in the configuration values as defined in the [Configuration Format](#configuration-format).
 
 If there was no configuration start byte received within a certain timeout, the Sender assumes that the connection is dead and aborts the connection process.
 
 While receiving the configuration, as soon as the protocol version is received, the Sender compares it to a list of compatible protocol versions. If incompatible, the Sender sends a [configuration error byte](#Configuration_Error_Byte_link) and aborts the connection process.
 
 
-#### <a name="Confirming_The_Configuration_link"></a>Confirming the configuration:
+#### <a name="configuration-confirmation"></a>Configuration Confirmation:
 ##### Sender:
 After receiving the configuration successfully, the Sender applies and stores the configuration parameters. These parameters should be accessible by the user via the Senders API.
 
@@ -202,7 +204,7 @@ These steps are repeated until the protocol disconnects.
 #### <a name="receiving-new-frames"></a>Receiving new Frames
 Receiving frames consists of the following steps:
 1. Receiving frame header
-   - The Receiver reads in the [frame header's fields](#Frame_Header_link) as defined in the header specification.
+   - The Receiver reads in the [frame header fields](#frame-header) as defined in the header specification.
    - Memory for the Body gets allocated based on the Frame Body Size header field. If not possible, the Receiver sends a `OUT_OF_MEMORY` Frame Error.
 2. Receiving frame body
    - The Receiver reads in the [frame body](#frame-body) as defined in the specification.
@@ -290,18 +292,18 @@ The following steps are done when reading in a response:
 
 ----------------------------------------------------------------------------------------------
 
-### <a name="Disconnecting_link"></a> Disconnecting:
+### <a name="disconnecting"></a> Disconnecting:
 
 
 ##### Sender:
 
-When the Sender wants to disconnect, it sends a frame with a [`disconnect command`](#Protocol_Commands_link) to the Receiver and then disconnects
+When the Sender wants to disconnect, it sends a frame with a [`disconnect command`](#commands) to the Receiver and then disconnects
 his side of the connection by invalidating all connection relevant values and disconnecting all underlying protocols.
 
 
 ##### Receiver:
 
-Upon receiving a frame with a [`disconnect command`](#Protocol_Commands_link) inside the frame header, the Receiver treats the connection as dead, invalidates all connection relevant values, and disconnects the underlying connection on his side if needed. A final [frame acknowledgement](#Frame_Acknowledgement_Byte_link) is sent to confirm the disconnect.
+Upon receiving a frame with a [`disconnect command`](#commands) inside the frame header, the Receiver treats the connection as dead, invalidates all connection relevant values, and disconnects the underlying connection on his side if needed. A final [frame acknowledgement](#Frame_Acknowledgement_Byte_link) is sent to confirm the disconnect.
 
 When the Receiver wants to initiate disconnecting, it can only do so indirectly by
 stopping to respond to frames with frame acknowledgements or frame errors. This causes a time out on the Sender.
@@ -346,20 +348,20 @@ Where:
 For more information on how this formula was deduced, see [here](https://skyfighter64.github.io/timesync/2025/09/09/Time-Synchronization.html)
 
 __Note:__ If no frames are sent for a long time, responses might be read with great delay. Therefore it is advised to either read all open responses before pausing for a long time or ignoring time synchronization when sending latency `t2-t1` and receiving latency `t4-t3` have large differences.
-__Note:__ For more stable time synchronization, it is advised to take the median of many `time_offset` calculations as acutal offset.
+__Note:__ For more stable time synchronization, it is advised to take the median of many `time_offset` calculations as actutal offset.
 
 
 
 -----------------------------------------------------------------
 
-## <a name="Definitions_link"></a>Definitions
+## <a name="definitions"></a>Definitions
 
 This section contains definitions and constants of the protocol
 
-### <a name="Data_Types_link"></a>Data Types:
+### <a name="data-types"></a>Data Types:
 All mentions of the data types within this documentation refer to the definitions below if not stated otherwise.
 
-#### <a name="String_link"></a>String:
+#### <a name="string"></a>String:
 A string is a combination of UTF-8 encoded characters followed by a null byte used as terminator.
 String data has a dynamic length; The end of a string is marked with a Null byte (`0x00`) as a terminator.
 
@@ -368,7 +370,7 @@ When sending String data, send a Null byte (`0x00`) afterwards if it is not done
 <img src="./media/general/en/string.svg" alt="A string as defined above" height=25%>
 
 
-#### <a name="Integer_link"></a>Integer:
+#### <a name="integer"></a>Integer:
 An integer number is a 32-bit 2s-compliment number.
 
 <img src="./media/general/en/integer.svg" alt="An integer as defined above" height=25%>
@@ -384,7 +386,7 @@ A short is a 16bit 2s-compliment number.
 
 <img src="./media/general/en/short.svg" alt="A short as defined above" height=25%>
 
-#### <a name="Byte_link"></a>Byte:
+#### <a name="byte"></a>Byte:
 A byte is an 8bit unsigned number ranging from 0 to 255.
 
 <img src="./media/general/en/byte.svg" alt="A byte as defined above" height=25%>
@@ -402,7 +404,7 @@ important to ensure a null terminator is also sent so the receiving device does 
 --------------------------------------------------------------------------------
 
 
-### <a name="Constants_link"></a>Constants:
+### <a name="constants"></a>Constants:
 This section describes all relevant constants
 
 Name | Value | Description
@@ -424,7 +426,7 @@ OUT OF MEMORY | 3 | The memory needed to receive the frame body could not be all
 INVALID COMMAND | 4 | An unknown command was given
 --------------------------------------------------------------------------------
 
-### <a name="#Configuration_Format_link"></a>Configuration Format:
+### <a name="#configuration-format"></a>Configuration Format:
 This section describes the format of the configuration used while connecting.
 
 The configuration has to be in the following format:
@@ -465,11 +467,11 @@ The configuration has to be in the following format:
 
 
 
-#### <a name="Configuration_Values_link"></a>Configuration Values:
+#### <a name="configuration-values"></a>Configuration Values:
 
 <a name="Configuration_Start_Byte_link"></a>
 __Configuration Start Byte (CSB):__
-  - Type: [Byte](#Byte_link)
+  - Type: [Byte](#byte)
     - Constant Value: 253 (base 10)
   - Size: 1 Byte
   - Description: A byte marking the start of the configuration. It is followed by the configuration values according to the protocol configuration format.
@@ -477,7 +479,7 @@ __Configuration Start Byte (CSB):__
 
 <a name="Protocol_Version_link"></a>
 __Protocol Version:__
-  - Type: [String](#String_link (UTF-8)
+  - Type: [String](#string (UTF-8)
   - Size: Dynamic
   - Description: the protocol version used by the Receiver
   - Valid values:
@@ -486,21 +488,21 @@ __Protocol Version:__
 
 <a name="Device_Name_link"></a>
 __Device Name:__
-  - Type: [String](#String_link) (UTF-8)
+  - Type: [String](#string) (UTF-8)
   - Size: Dynamic
   - Description: A descriptive name of the Receiver; Does not have to be unique
-  - Valid values: Any [String](#String_link) value
+  - Valid values: Any [String](#string) value
 
 <a name="Number_Of_Leds_link"></a>
 __LED Count:__
-  - Type: [Integer](#Integer_link)
+  - Type: [Integer](#integer)
   - Size: 4 Bytes
   - Description: The number of LEDs on the addressable LED strip connected to the Receiver
   - Valid values: Any positive Integer value or 0
 
 <a name="Data_Pin_link"></a>
 __Data pin:__
-  - Type: [Integer](#Integer_link)
+  - Type: [Integer](#integer)
   - Size: 4 Bytes
   - Description: The digital pin at which the data line of the addressable LED strip is connected
   - Valid values:
@@ -509,7 +511,7 @@ __Data pin:__
 
 <a name="Clock_pin_link"></a>
 __Clock pin:__
-  - Type: [Integer](#Integer_link)
+  - Type: [Integer](#integer)
   - Size: 4 Bytes
   - Description: The digital pin at which the clock line of the addressable LED strip is connected.
   - Valid values:
@@ -518,17 +520,17 @@ __Clock pin:__
 
 <a name="Extra_Values_link"></a>
 __Extra Values:__
-  - Type: [String](#String_link) (UTF-8)
+  - Type: [String](#string) (UTF-8)
   - Size: Dynamic
   - Description: A string containing user-customizable configuration values; This can be used by anyone to send additional configuration values, but may be ignored depending on the implementation.
-  - Valid values: Any [String](#String_link) value
+  - Valid values: Any [String](#string) value
 
 
 
 --------------------------------------------------------------------------------
 
 
-### <a name="Frame_Format_link"></a>Frame:
+### <a name="frame"></a>Frame:
 A frame consists of 2 parts:\
 The frame header and the frame body.
 
@@ -547,7 +549,7 @@ __Frame:__
 
 Those parts are structured as stated below:
 
-### <a name="Frame_Header_link"></a>Frame Header:
+### <a name="frame-header"></a>Frame Header:
 The frame header consists of 10 bytes:
 
 __Frame Header:__
@@ -584,14 +586,14 @@ __ID__
 __Command__
   - Type: Byte
   - Size: 1 Byte
-  - Description: A byte value specifying a command to be executed before the upcoming [Color data](#Color_Data_link) gets applied or how to interpret the frame body.
-  For more, see [commands](#Commands_link).
+  - Description: A byte value specifying a command to be executed before the upcoming [Color data](#color-data) gets applied or how to interpret the frame body.
+  For more, see [commands](#commands).
   - Valid values: Any byte value (0-255)
 
 
 <a name="Frame_Body_Size_link"></a>
 __Frame Body Size__
-  - Type: [Integer](#Integer_link)
+  - Type: [Integer](#integer)
   - Size: 4 Bytes
   - Description: The size of the upcoming frame body in bytes
   - Valid values:
@@ -602,7 +604,7 @@ __Frame Body Size__
 
 <a name="Frame_Body_Offset_link"></a>
 __Frame Body Offset__
-  - Type: [Integer](#Integer_link)
+  - Type: [Integer](#integer)
   - Size: 4 Bytes
   - Description: The offset of the data from the first LED
   - Valid values: A positive number or 0
@@ -611,13 +613,13 @@ __Frame Body Offset__
 
 <a name="time-stamp"></a>
 __Time stamp__
-  - Type: 32bit unsigned [Integer](#Integer_link)
+  - Type: 32bit unsigned [Integer](#integer)
   - Size: 4 Bytes
   - Description: A time stamp in milliseconds in the receivers time domain.
   - Valid values: A positive number or 0 to disable
 
 
-### <a name="Color_Data_link"></a>Color data:
+### <a name="color-data"></a>Color data:
 
 One or multiple sets of 3 bytes representing the Red, Green and Blue color value each within a range of 0-255 in binary representation.
 ```
@@ -629,8 +631,8 @@ One or multiple sets of 3 bytes representing the Red, Green and Blue color value
 ```
 
 
-### <a name="Frame_Body_link"></a>Frame Body:
-The frame body consists multiple [color data](#Color_Data_link) fields. Its size in bytes is specified in the [`Frame Body size`](#Frame_Body_Size_link) header value.
+### <a name="frame-body"></a>Frame Body:
+The frame body consists multiple [color data](#color-data) fields. Its size in bytes is specified in the [`Frame Body size`](#Frame_Body_Size_link) header value.
 
 
 __Frame Body Structure:__
@@ -666,7 +668,7 @@ __Frame Body Structure:__
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 __Frame Acknowledgement Byte (FAB)__
-  - Type: 8bit unsigned [Integer](#Integer_link)
+  - Type: 8bit unsigned [Integer](#integer)
   - Size: 1 Byte
   - Description: Protocol Constant: 250 (base 10)
 
@@ -677,13 +679,13 @@ __ID__
   - Valid values: Any byte value (0-255)
 
 __t2__
-  - Type: 32bit unsigned [Integer](#Integer_link)
+  - Type: 32bit unsigned [Integer](#integer)
   - Size: 4 Byte
   - Description: Timestamp t2 used for [time synchronization](#time-synchronization)
   - Valid values: Any unsigned integer value
 
 __t3__
-  - Type: 32bit unsigned [Integer](#Integer_link)
+  - Type: 32bit unsigned [Integer](#integer)
   - Size: 4 Byte
   - Description: Timestamp t3 used for [time synchronization](#time-synchronization)
   - Valid values: Any unsigned integer value
@@ -698,7 +700,7 @@ __t3__
 +-+-+-+-+-+-+-+-+
 ```
 __Frame Error Byte (FRB)__
-  - Type: 8bit unsigned [Integer](#Integer_link)
+  - Type: 8bit unsigned [Integer](#integer)
   - Size: 1 Byte
   - Description: Protocol Constant: 249 (base 10)
 
@@ -709,7 +711,7 @@ __ID__
   - Valid values: Any byte value (0-255)
 
 __Error Code__
-  - Type: 8bit unsigned [Integer](#Integer_link)
+  - Type: 8bit unsigned [Integer](#integer)
   - Size: 1 Byte
   - Description: Error code describing the cause of the frame error. See [frame error codes](#frame-error-codes)
 
@@ -717,7 +719,7 @@ __Error Code__
 
 ----------------------------------------------------------------------
 
-## <a name="Commands_link"></a>Commands
+## <a name="commands"></a>Commands
 Each frame contains a command which specifies what function to execute and how to interpret the frame body.
 There are a number of predefined commands and reserved command ranges. Other ranges can be user-defined for personal use.
 
@@ -725,9 +727,9 @@ List of Commands:
 
 Name   | Value | Description
 :---- | ----- | -----------
-None | 0  | The default command. Command stating that the [frame body](#Frame_Body_link) should be applied to the LEDs. LEDs not changed by the frame body will remain unchanged.
-Clear | 1 | Command setting all LED values to Black 0 before applying the [frame body](#Frame_Body_link). If the [frame body](#Frame_Body_link) is empty, all LEDs get set to black, if the body contains [Color data](#Color_Data_link), the color data gets applied and all LEDs not changed by the frame body get set to black.
-Disconnect | 2 |  Command invoking the [disconnecting](#Disconnecting_link) process.
+None | 0  | The default command. Command stating that the [frame body](#frame-body) should be applied to the LEDs. LEDs not changed by the frame body will remain unchanged.
+Clear | 1 | Command setting all LED values to Black 0 before applying the [frame body](#frame-body). If the [frame body](#frame-body) is empty, all LEDs get set to black, if the body contains [Color data](#color-data), the color data gets applied and all LEDs not changed by the frame body get set to black.
+Disconnect | 2 |  Command invoking the [disconnecting](#disconnecting) process.
 RESERVED |3 - 127|  Commands reserved for future use.
 User Defined | 128 - 255 | Command values with no official use. Intended to be used by anyone to define custom commands.
 
