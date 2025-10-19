@@ -45,8 +45,11 @@ For reference implementations see:
 - [Definitions](#definitions)
   - [Data Types](#data-types)
   - [Constants](#constants)
+  - [Error Codes](#frame-error-codes)
   - [Configuration Format](#configuration-format)
   - [Frame Format](#frame)
+  - [Acknowledgement Format](#frame-acknowledgement-format)
+  - [Error Format](#frame-error-format)
   - [Commands](#commands)
 
 ## <a name="overview"></a> Overview
@@ -651,7 +654,7 @@ __Frame Body Structure:__
 ```
 
 
-### <a name="frame-acknowledgement-formats"></a>Frame Acknowledgement Format:
+### <a name="frame-acknowledgement-format"></a>Frame Acknowledgement Format:
 ```
  0                   1 1 1 1 1 1
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
@@ -690,6 +693,8 @@ __t3__
   - Description: Timestamp t3 used for [time synchronization](#time-synchronization)
   - Valid values: Any unsigned integer value
 
+
+### <a name="frame-error-format"></a>Frame Error Format:
 ```
  0                   1 1 1 1 1 1
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
