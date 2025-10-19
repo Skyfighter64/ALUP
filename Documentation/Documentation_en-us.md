@@ -199,10 +199,6 @@ The receiver executes the following steps:
 These steps are repeated until the protocol disconnects.
 
 
- TODO: update image
-<img src="./media/general/en/Data transmission diagram.svg" alt="Overview over the data transmission procedure" height=800px>
-
-
 #### <a name="receiving-new-frames"></a>Receiving new Frames
 Receiving frames consists of the following steps:
 1. Receiving frame header
