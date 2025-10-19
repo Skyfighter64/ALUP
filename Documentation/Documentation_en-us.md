@@ -66,7 +66,7 @@ The ALUP describes a way how the RGB data gets from the PC (Sender) to the Micro
 
 - __Customizable:__ Programs can add custom configuration values and trigger pre-defined commands on the Receiver.
 
-- __Realtime:__ Designed to work as fast as possible with features like time stamps, time synchronization and frame buffering
+- __Realtime:__ Designed to work as fast as possible with features like time stamps, time synchronization and frame buffering.
 
 ## Requirements
 A list of requirements for the protocol.
@@ -178,7 +178,7 @@ If the configuration was received and applied successfully, the Sender sends a [
 ----------------------------------------------------------------
 
 
-### <a name="Data_Transmission_link"></a>Data transmission:
+### <a name="data-transmission"></a>Data transmission:
 In the data transmission phase, the Sender sends frames in unspecified intervals to the receiver. 
 The receiver buffers incoming frames and executes the frame's command when its time stamp was reached.
 After execution, the receiver answers the frame with either a Frame Acknowledgement or a Frame Error.  
@@ -190,7 +190,7 @@ The following will describe this process in detail from the Sender's and Receive
 ### Data Transmission on the Receiver
 
 The receiver executes the following steps:
-1. **Receive new Frame** if available and buffer is empty
+1. **Receive new Frame** if available and buffer has space
 2. If buffer contains frames and oldest frame's time stamp was reached:
    - **Apply Frame** Command
    - **Remove frame** from tail of the buffer
@@ -210,12 +210,12 @@ Receiving frames consists of the following steps:
    - Memory for the Body gets allocated based on the Frame Body Size header field. If not possible, the Receiver sends a `OUT_OF_MEMORY` Frame Error.
 2. Receiving frame body
    - The Receiver reads in the [frame body](#frame-body) as defined in the specification.
-3. Add frame to the head of the buffer
+3. Add frame to the buffer
 
 
 #### <a name="applying-a-frame"></a>Applying a Frame
 
-The receiver checks the header's `command` field. Based on the command it executes different steps:
+The receiver checks the header's `command` field. Based on the command it executes different functions:
 - `NONE` `(0)`: Default Command. **Apply the frame body** colors to the LEDs.
 - `CLEAR` `(1)`: Set color of all LEDs to black. If present, **apply the frame body** colors to the LEDs afterwards.
 - `DISCONNECT` `(2)`: Acknowledge Frame and **Disconnect** protocol and connection.
@@ -231,7 +231,11 @@ When applying the frame body:
 3. Apply convert the frame body to color values and apply them to the LEDs.
 
 -------------------------------
+#### <a name="sending-an-answer"></a>Sending an Answer
+As soon as the frame's command was executed an answer is sent.
+Depending on the outcome of the execution, this may be either a frame acknowledgement indicating success or a frame error with a corresponding error code.
 
+Before sending an acknowledgement, the `t3` timestamp is recorded and included with the acknowledgement in the corresponding field.
 
 ### Data Transmission on the Sender
 
