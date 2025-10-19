@@ -349,7 +349,8 @@ Where:
 
 For more information on how this formula was deduced, see [here](https://skyfighter64.github.io/timesync/2025/09/09/Time-Synchronization.html)
 
-
+__Note:__ If no frames are sent for a long time, responses might be read with great delay. Therefore it is advised to either read all open responses before pausing for a long time or ignoring time synchronization when sending latency `t2-t1` and receiving latency `t4-t3` have large differences.
+__Note:__ For more stable time synchronization, it is advised to take the median of many `time_offset` calculations as acutal offset.
 
 
 
@@ -653,7 +654,7 @@ __Frame Body Structure:__
 
 
 ### <a name="frame-acknowledgement-formats"></a>Frame Acknowledgement Format:
-
+```
  0                   1 1 1 1 1 1
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -667,7 +668,7 @@ __Frame Body Structure:__
 +               t3              +
 |                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
+```
 __Frame Acknowledgement Byte (FAB)__
   - Type: 8bit unsigned [Integer](#Integer_link)
   - Size: 1 Byte
@@ -691,7 +692,7 @@ __t3__
   - Description: Timestamp t3 used for [time synchronization](#time-synchronization)
   - Valid values: Any unsigned integer value
 
-
+```
  0                   1 1 1 1 1 1
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -699,7 +700,7 @@ __t3__
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |  Error Code   |
 +-+-+-+-+-+-+-+-+
-
+```
 __Frame Error Byte (FRB)__
   - Type: 8bit unsigned [Integer](#Integer_link)
   - Size: 1 Byte
@@ -721,29 +722,22 @@ __Error Code__
 ----------------------------------------------------------------------
 
 ## <a name="Commands_link"></a>Commands
-This sections explains the use of the `Command` header value.
-
-Commands specify an action to execute for the Receiver. This could be an information on how to interpret the contents of the frame body or an execution of predefined code on the Receiver.
-
-As example, the `CLEAR` command specifies that the frame body should be applied to the LED strip but, contrary to the default behavior, all LEDs not set to a color in the body will be set to black.
-
-For another example, the `DISCONNECT` command specifies that the code for disconnecting should be executed. The Frame Body is ignored.
-
-This creates extensibility to a point where everyone can specify custom commands fitting for their projects needs.
-
+Each frame contains a command which specifies what function to execute and how to interpret the frame body.
+There are a number of predefined commands and reserved command ranges. Other ranges can be user-defined for personal use.
 
 List of Commands:
 
 Name   | Value | Description
 :---- | ----- | -----------
 None | 0  | The default command. Command stating that the [frame body](#Frame_Body_link) should be applied to the LEDs. LEDs not changed by the frame body will remain unchanged.
-Clear | 1 | Command setting all LED values to 0 before applying the [frame body](#Frame_Body_link). If the [frame body](#Frame_Body_link) is empty, all LEDs get set to black, if the body contains [Color data](#Color_Data_link), the color data gets applied and all LEDs not changed by the frame body get set to black.
+Clear | 1 | Command setting all LED values to Black 0 before applying the [frame body](#Frame_Body_link). If the [frame body](#Frame_Body_link) is empty, all LEDs get set to black, if the body contains [Color data](#Color_Data_link), the color data gets applied and all LEDs not changed by the frame body get set to black.
 Disconnect | 2 |  Command invoking the [disconnecting](#Disconnecting_link) process.
-RESERVED |3 - 7|  Commands reserved for future use.
-User Defined | 8 - 255 | Command values with no official use. Intended to be used by anyone to define custom commands.
+RESERVED |3 - 127|  Commands reserved for future use.
+User Defined | 128 - 255 | Command values with no official use. Intended to be used by anyone to define custom commands.
 
 
-Some Ideas for custom commands (may be implemented in the future idk):
+Here are some ideas for custom commands (might be implemented in the future):
 - Command for 'White' Color frames for RGBW LED strips
 - Commands triggering predefined animations
 - Command setting static colors
+- Commands for use with data compression of the frame body
