@@ -234,40 +234,63 @@ When applying the frame body:
 #### <a name="sending-an-answer"></a>Sending an Answer
 As soon as the frame's command was executed an answer is sent.
 Depending on the outcome of the execution, this may be either a frame acknowledgement indicating success or a frame error with a corresponding error code.
+The following steps are done when sending an answer for a specific frame
 
-Before sending an acknowledgement, the `t3` timestamp is recorded and included with the acknowledgement in the corresponding field.
+- If sending a frame acknowledgement:
+  1. Set the answer's ID to the frame's ID
+  2. Record `t3` time stamp and include with acknowledgement
+  3. Build acknowledgement according to definition
+  4. Send Acknowledgement
+
+- If sending a frame error: 
+  1. Set the answer's ID to the frame's ID
+  2. Build frame error according to definition
+  3. Send frame error
+
 
 ### Data Transmission on the Sender
 
-#TODO
+The sender may send a frame at any time at will by executing the following steps:
 
-#### <a name="Sending_Frames_link"></a>Sending Frames
-##### Sender:
-As soon as the Sender receives the Configuration acknowledgement from the Receiver, it sends [`Data Frames`](#Frame_link) to the Receiver in undefined intervals.
+1. Build and **Send** the frame
+2. **Wait** for an Answer
 
-The [frame header](#Frame_Header_link) and [body](#Frame_Body_link) are constructed as defined considering the following rules:
-
-- All rules stated for applying the frame body when [receiving a frame](#Receiving_Frames_link)
-
-The built frame gets appended at the end of the header and sent to the Receiver.
-
-
-The Sender then waits for a [frame acknowledgement](#Frame_Acknowledgement_Byte_link) or [frame error](#Frame_Error_Byte_link)
-
-If a [frame acknowledgement](#Frame_Acknowledgement_Byte_link) or [frame error](#Frame_Error_Byte_link) is received, the next frame can be sent.
-
-While a [frame acknowledgement](#Frame_Acknowledgement_Byte_link) indicates a successful operation, a [frame error](#Frame_Error_Byte_link) indicates an issue with the frame. This can be:
-
-- For `None` and `Clear` commands:
-    - The body size is no multiple of 3
-- For any other commands, see command definition.
+#### <a name="sending-a-frame"></a>Sending a Frame
+When sending a frame, the following steps are done:
+1. Set the **Frame ID**.
+    - The frame ID header field of the frame is set to the ID of the previously sent frame incremented by 1. If this exceeds the buffer size, reset to 0.
+    - Convert the Frame's time stamp from sender time domain to receiver time domain (see [time synchronization](#time-synchronization))
+2. **Send frame** to receiver
+    - Record and save outgoing time stamp `t4`
+    - Send frame over connection
+3. Add frame to 'unanswered frames' buffer
 
 
-If no [frame acknowledgement](#Frame_Acknowledgement_Byte_link) or [frame error](#Frame_Error_Byte_link) is received within a specified time interval, the connection is considered dead and can be terminated.
+#### <a name="waiting-for-an-answer"></a>Waiting for an Answer
+When waiting for a frame answer, the following steps are done:
+
+1. Wait for one frame response with a time out  
+    - Use the remaining duration until the timestamp of the oldest frame in the buffer as timeout
+    - Check if 'unanswered frames' buffer is full. If so, additionally increase the timeout by a large value (~10s)
+    - Read in the response
+
+2. If additional responses were received:
+    - Read in any other received responses with no timeout and non-blocking.
 
 
-[Fig. 2_data_en] (Overview of the Data transmission process for the Sender)
+#### <a name="reading-in-a-response"></a>Reading in a Response
+A received response may either be a frame acknowledgement or a frame error which are both handled differently.
+The following steps are done when reading in a response:
 
+1. Check response type
+  - If response is a frame acknowledgement:
+    - Record incoming timestamp `t4`
+    - Synchronize time
+
+  - If response is a frame error:
+    - Report Frame Error to user
+
+2. Remove frame with matching ID from buffer
 
 ----------------------------------------------------------------------------------------------
 
@@ -288,7 +311,47 @@ When the Receiver wants to initiate disconnecting, it can only do so indirectly 
 stopping to respond to frames with frame acknowledgements or frame errors. This causes a time out on the Sender.
 
 
-[Fig. 1_disconnect_en] (Overview of the disconnection process)
+-----------------------------------------------------------------
+
+### <a name="buffering"></a> Buffering:
+
+To balance out potential variation in transmission delay, both sender and receiver contain a FIFO frame buffer.
+Both buffers have the same size and similar tasks:
+
+- On the Sender, the buffer tracks the (headers of) unanswered frames for time synchronization. More specifically, it makes it possible to match time stamps of acknowledgements to the corresponding frames.
+
+- On the Receiver, the buffer contains unapplied frames. The first frame in buffer is kept until its time stamp passes, and then applied to the LEDs. Then, its answer is sent and it is removed from the buffer.
+This buffer is not sorted by time stamps, but rather by the order at which frames were received. If a time stamp is already passed, it is applied instantly.
+
+- Correlating frames in each buffer always have the same frame ID. No ID should exist twice in one buffer.
+
+
+### <a name="time-synchronization"></a> Time Synchronization:
+To use time stamps with frames, time synchronization is performed on the Sender's side.
+For this, the sender calculates and saves the linear offset of its own clock to the receivers internal clock.
+
+When sending a frame, its time stamp is converted from the Senders time domain to the receivers time domain:
+```py
+timestamp_on_receiver = timestamp_on_sender + time_offset
+```
+
+The time offset is calculated similar to gPTP time synchronization by recording the sending and receiving time stamps `t1, t4`
+on the Sender and `t2, t3` on the Receiver:
+
+```py
+time_offset = (-t1 + t2 + t3 - t4)/ 2
+```
+Where:
+- `t1` is the time at which the frame was sent by the Sender in the Sender's time domain
+- `t2` is the time at which the frame was received by the Receiver in the Receiver's time domain
+- `t3` is the time at which the frame answer was sent by the Receiver in the Receiver's time domain
+- `t4` is the time at which the frame answer was received by the Sender in the Sender's time domain
+
+For more information on how this formula was deduced, see [here](https://skyfighter64.github.io/timesync/2025/09/09/Time-Synchronization.html)
+
+
+
+
 
 -----------------------------------------------------------------
 
@@ -355,6 +418,13 @@ Name | Value | Description
 <a name="Frame_Acknowledgement_Byte_link"></a>__Frame Acknowledgement Byte__ | 250 (base 10) | Byte value sent by the Receiver to indicate that a Frame was received and applied successfully
 <a name="Frame_Error_Byte_link"></a>__Frame Error Byte__ | 249 (base 10) |Byte value indicating that a Frame could not be received or applied successfully.<br/> Caused by: <ul> <li>Invalid [`frame body size`](#Frame_Body_Size_link)</li><li>Invalid [`frame body offset`](#Frame_Body_Offset_link)</li></ul>
 
+### <a name="frame-error-codes"></a>Frame Error Codes:
+Name | Value | Description
+:--- | --- | ---
+INVALID OFFSET | 1 | The frame offset was out of range
+INVALID BODY SIZE | 2 | The frame body size was not a multiple of 3
+OUT OF MEMORY | 3 | The memory needed to receive the frame body could not be allocated
+INVALID COMMAND | 4 | An unknown command was given
 --------------------------------------------------------------------------------
 
 ### <a name="#Configuration_Format_link"></a>Configuration Format:
@@ -485,8 +555,10 @@ The frame header consists of 10 bytes:
 
 __Frame Header:__
 ```
-0                   1 1 1 1 1 1
-0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+ 0                   1 1 1 1 1 1
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|       ID     |     COMMAND    |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                               |
 +        Frame Body Size        +
@@ -496,11 +568,29 @@ __Frame Header:__
 +       Frame Body Offset       +
 |                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    COMMAND    |     Unused    |
+|                               |
++          Time Stamp           +
+|                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 ```
 __Content descriptions:__
+
+<a name="ID"></a>
+__ID__
+  - Type: 8bit unsigned Byte
+  - Size: 1 Byte
+  - Description: An identifier to match frames with their corresponding answers
+  - Valid values: Any byte value (0-255)
+
+<a name="Command_Byte_link"></a>
+__Command__
+  - Type: Byte
+  - Size: 1 Byte
+  - Description: A byte value specifying a command to be executed before the upcoming [Color data](#Color_Data_link) gets applied or how to interpret the frame body.
+  For more, see [commands](#Commands_link).
+  - Valid values: Any byte value (0-255)
+
 
 <a name="Frame_Body_Size_link"></a>
 __Frame Body Size__
@@ -522,17 +612,13 @@ __Frame Body Offset__
 
 :warning: Causes a frame error to be sent if invalid.
 
-<a name="Command_Byte_link"></a>
-__Command__
-  - Type: Byte
-  - Size: 1 Byte
-  - Description: A byte value specifying a command to be executed before the upcoming [Color data](#Color_Data_link) gets applied or how to interpret the frame body.
-  For more, see [commands](#Commands_link).
-  - Valid values: Any byte value (0-255)
+<a name="time-stamp"></a>
+__Time stamp__
+  - Type: 32bit unsigned [Integer](#Integer_link)
+  - Size: 4 Bytes
+  - Description: A time stamp in milliseconds in the receivers time domain.
+  - Valid values: A positive number or 0 to disable
 
-
-__Byte: 9__
-  - Currently unused, reserved for future use.
 
 ### <a name="Color_Data_link"></a>Color data:
 
@@ -564,6 +650,73 @@ __Frame Body Structure:__
 |       R       |       G       |       B       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
+
+
+### <a name="frame-acknowledgement-formats"></a>Frame Acknowledgement Format:
+
+ 0                   1 1 1 1 1 1
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|      FAB      |       ID      |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               |
++               t2              +
+|                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                               |
++               t3              +
+|                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+__Frame Acknowledgement Byte (FAB)__
+  - Type: 8bit unsigned [Integer](#Integer_link)
+  - Size: 1 Byte
+  - Description: Protocol Constant: 250 (base 10)
+
+__ID__
+  - Type: 8bit unsigned Byte
+  - Size: 1 Byte
+  - Description: An identifier to match frames with their corresponding answers
+  - Valid values: Any byte value (0-255)
+
+__t2__
+  - Type: 32bit unsigned [Integer](#Integer_link)
+  - Size: 4 Byte
+  - Description: Timestamp t2 used for [time synchronization](#time-synchronization)
+  - Valid values: Any unsigned integer value
+
+__t3__
+  - Type: 32bit unsigned [Integer](#Integer_link)
+  - Size: 4 Byte
+  - Description: Timestamp t3 used for [time synchronization](#time-synchronization)
+  - Valid values: Any unsigned integer value
+
+
+ 0                   1 1 1 1 1 1
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|      FEB      |       ID      |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|  Error Code   |
++-+-+-+-+-+-+-+-+
+
+__Frame Error Byte (FRB)__
+  - Type: 8bit unsigned [Integer](#Integer_link)
+  - Size: 1 Byte
+  - Description: Protocol Constant: 249 (base 10)
+
+__ID__
+  - Type: 8bit unsigned Byte
+  - Size: 1 Byte
+  - Description: An identifier to match frames with their corresponding answers
+  - Valid values: Any byte value (0-255)
+
+__Error Code__
+  - Type: 8bit unsigned [Integer](#Integer_link)
+  - Size: 1 Byte
+  - Description: Error code describing the cause of the frame error. See [frame error codes](#frame-error-codes)
+
+
 
 ----------------------------------------------------------------------
 
