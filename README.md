@@ -22,9 +22,9 @@ If you want to control LEDs as just described, see the reference implementations
 - [Arduino-ALUP (Receiver)](https://github.com/Skyfighter64/Arduino-ALUP)
 
 ## Documentation
-The detailed protocol documentation is available at [Documentation/Documentation_en-us.md](#https://github.com/Skyfighter64/ALUP/blob/master/Documentation/Documentation_en-us.md)
+The detailed protocol documentation is available at [Documentation/Documentation_en-us.md](https://github.com/Skyfighter64/ALUP/blob/v.0.3/Documentation/Documentation_en-us.md)
 
 
 
 ## License
-This project is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). For more information, see [LICENSE](https://github.com/Skyfighter64/ALUP/blob/master/LICENSE)
+This project is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). For more information, see LICENSE.
