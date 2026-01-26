@@ -195,7 +195,7 @@ The following will describe this process in detail from the Sender's and Receive
 ### Data Transmission on the Receiver
 
 The receiver executes the following steps:
-1. **Receive new Frame** if available and buffer has space
+1. **Receive new Frame** and store in buffer if available and buffer has space
 2. If buffer contains frames and oldest frame's time stamp was reached:
    - **Apply Frame** Command
    - **Remove frame** from tail of the buffer
@@ -228,12 +228,11 @@ If an unknown command was received, return a `INVALID_COMMAND` frame error.
 When applying the frame body:
 1. Check if the frame's `offset` field exceeds the LED count. If so, return an `INVALID_OFFSET` Frame error.
 2. Check if the frame body's size is a multiple of 3. If not, return a `INVALID_BODY_SIZE` frame error. 
- the RGB color data from the frame body gets applied to the LEDs.
-3. Apply convert the frame body to color values and apply them to the LEDs.
+3. Apply the color values from the frame body to the LEDs.
 
 -------------------------------
 #### <a name="sending-an-answer"></a>Sending an Answer
-As soon as the frame's command was executed an answer is sent.
+As soon as the frame's command was executed, an answer is sent.
 Depending on the outcome of the execution, this may be either a frame acknowledgement indicating success or a frame error with a corresponding error code.
 The following steps are done when sending an answer for a specific frame
 
