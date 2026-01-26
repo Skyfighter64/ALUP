@@ -481,7 +481,7 @@ __Configuration Start Byte (CSB):__
 
 <a name="Protocol_Version_link"></a>
 __Protocol Version:__
-  - Type: [String](#string (UTF-8)
+  - Type: [String](#string) (UTF-8)
   - Size: Dynamic
   - Description: the protocol version used by the Receiver
   - Valid values:
